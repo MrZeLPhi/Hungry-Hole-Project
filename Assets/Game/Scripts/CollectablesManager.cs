@@ -1,72 +1,101 @@
 using UnityEngine;
-using System.Collections; // Обов'язково для використання Coroutines
+using System.Collections;
+// using UnityEngine.UI; // <<< Цей рядок більше не потрібен тут!
 
 public class CollectablesManager : MonoBehaviour
 {
+    // ----- EVENTS -----
+    // Статичні події, на які можуть підписуватися інші класи.
+    // 'static' означає, що до них можна звертатися напряму через CollectablesManager.OnScoreChanged.
+    // 'Action<int>' означає, що подія передає одне ціле число (нові очки).
+    // 'Action<float>' означає, що подія передає одне число з плаваючою комою (новий розмір).
+    public static event System.Action<int> OnScoreChanged;
+    public static event System.Action<float> OnSizeChanged;
+    // ------------------
+
     [Header("Hole Growth Settings")]
-    public float initialHoleSize = 1.0f; // Початковий розмір отвору (X та Z)
-    private float currentHoleSize; // Поточний розмір отвору (X та Z)
-    public float growthMultiplier = 0.01f; // Множник для перетворення очок на збільшення розміру
+    public float initialHoleSize = 1.0f; 
+    private float _currentHoleSize; // Змінено на private
+    public float currentHoleSize // Публічний геттер, який викликає подію при зміні
+    {
+        get { return _currentHoleSize; }
+        private set
+        {
+            if (_currentHoleSize != value)
+            {
+                _currentHoleSize = value;
+                // Викликаємо подію OnSizeChanged, передаючи новий розмір
+                OnSizeChanged?.Invoke(_currentHoleSize);
+            }
+        }
+    }
+    public float growthMultiplier = 0.01f;
 
     [Header("Collectable Settings")]
-    [Tooltip("Час до остаточного знищення об'єкта після його поглинання (в секундах).")]
-    public float destroyDelay = 4.0f; // Час затримки до знищення
-
-    [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору. " +
-             "Об'єкт вважається меншим, якщо його розмір менший за розмір отвору МІНУС цей допуск.")]
-    public float sizeComparisonTolerance = 0.1f; 
+    public float destroyDelay = 4.0f;
+    public float sizeComparisonTolerance = 0.1f;
 
     [Header("Score Settings")]
-    public int totalScore = 0; // Загальна кількість набраних очок
+    private int _totalScore = 0; // Змінено на private
+    public int totalScore // Публічний геттер, який викликає подію при зміні
+    {
+        get { return _totalScore; }
+        private set
+        {
+            if (_totalScore != value)
+            {
+                _totalScore = value;
+                // Викликаємо подію OnScoreChanged, передаючи нові очки
+                OnScoreChanged?.Invoke(_totalScore);
+            }
+        }
+    }
 
-    void Start()
+    // <<< Видаляємо посилання на UI Text, бо тепер це відповідальність UI Manager'а >>>
+    // public Text scoreText;
+    // public Text sizeText;
+
+    void Awake() // Використовуємо Awake, щоб переконатися, що ініціалізація відбувається раніше Start
     {
         // Встановлюємо початковий розмір отвору, зберігаючи Y-розмір незмінним
         transform.localScale = new Vector3(initialHoleSize, transform.localScale.y, initialHoleSize);
-        currentHoleSize = initialHoleSize;
+        currentHoleSize = initialHoleSize; // Це викличе OnSizeChanged
 
-        Debug.Log("CollectablesManager: Ініціалізація завершена. Початковий розмір отвору: " + initialHoleSize);
+        Debug.Log("CollectablesManager: Ініціалізація завершена.");
     }
 
-    // Цей метод спрацьовує, коли інший коллайдер входить у тригер цього об'єкта
     void OnTriggerEnter(Collider other)
     {
         Debug.Log($"CollectablesManager: Об'єкт '{other.name}' увійшов у тригер.");
 
-        // Спробуємо отримати компонент Collectable з об'єкта, що зіткнувся
         Collectable collectable = other.GetComponent<Collectable>();
 
-        // Перевіряємо, чи об'єкт має скрипт Collectable, і чи він не є самим гравцем
         if (collectable != null && other.gameObject != this.gameObject)
         {
-            // Перевіряємо, чи об'єкт достатньо малий, щоб його "з'їсти"
-            if (other.transform.localScale.x < currentHoleSize - sizeComparisonTolerance) 
+            if (other.transform.localScale.x < currentHoleSize - sizeComparisonTolerance)
             {
-                Debug.Log($"CollectablesManager: Об'єкт '{other.name}' (розмір X: {other.transform.localScale.x}) поглинається. Поточний розмір отвору XZ: {currentHoleSize}.");
+                Debug.Log($"CollectablesManager: Об'єкт '{other.name}' поглинається.");
 
-                // Додаємо очки
-                totalScore += collectable.scoreValue;
-                Debug.Log("Очки: " + totalScore);
+                totalScore += collectable.scoreValue; // Це викличе OnScoreChanged
 
-                // Збільшуємо розмір отвору тільки по X та Z
-                currentHoleSize += (collectable.scoreValue * growthMultiplier); 
+                currentHoleSize += (collectable.scoreValue * growthMultiplier); // Це викличе OnSizeChanged
                 transform.localScale = new Vector3(currentHoleSize, transform.localScale.y, currentHoleSize);
 
-                // *** ВАЖЛИВО: Вимикаємо коллайдер та рендерер негайно ***
-                // Об'єкт стає невидимим і не взаємодіє одразу після "поглинання".
-                other.enabled = false; // Вимкнути Collider
+                // UI оновлюється автоматично через події, тому цей виклик більше не потрібен
+                // UpdateUI(); 
+
+                other.enabled = false;
                 MeshRenderer objRenderer = other.GetComponent<MeshRenderer>();
                 if (objRenderer != null)
                 {
-                    objRenderer.enabled = true; // Вимкнути візуалізацію (зробити невидимим)
+                    objRenderer.enabled = true;
                 }
                 
-                // *** ЗАПУСКАЄМО КОРУТИНУ ДЛЯ ЗНИЩЕННЯ ІЗ ЗАТРИМКОЮ ***
                 StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay));
             }
             else
             {
-                Debug.Log($"CollectablesManager: Об'єкт '{other.name}' (розмір X: {other.transform.localScale.x}) завеликий для поглинання (поточний розмір отвору XZ: {currentHoleSize}).");
+                Debug.Log($"CollectablesManager: Об'єкт '{other.name}' завеликий для поглинання.");
             }
         }
         else if (collectable == null)
@@ -75,21 +104,21 @@ public class CollectablesManager : MonoBehaviour
         }
     }
 
-    // Корутина для знищення об'єкта після заданої затримки
     IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay)
     {
         Debug.Log($"CollectablesManager: Корутина 'DestroyAfterDelay' для об'єкта '{objToDestroy.name}' розпочалася. Затримка: {delay} с.");
-
         yield return new WaitForSeconds(delay); 
-        
         if (objToDestroy != null)
         {
             Destroy(objToDestroy);
-            Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено після затримки {delay} с.");
+            Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено.");
         }
         else
         {
-            Debug.LogWarning($"CollectablesManager: Спроба знищити об'єкт, який вже дорівнює null (можливо, вже знищений).");
+            Debug.LogWarning($"CollectablesManager: Спроба знищити об'єкт, який вже дорівнює null.");
         }
     }
+
+    // <<< Цей метод UpdateUI більше не потрібен тут! >>>
+    // void UpdateUI() { ... }
 }

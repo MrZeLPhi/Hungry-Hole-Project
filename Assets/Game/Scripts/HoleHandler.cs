@@ -10,15 +10,21 @@ public class HoleHandler : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Перевіряємо, чи об'єкт, що увійшов, належить до 'NormalSphereLayer'.
-        // ((1 << other.gameObject.layer) & NormalSphereLayer) != 0 перевіряє,
-        // чи поточний шар об'єкта входить до маски NormalSphereLayer.
+        Debug.Log($"HoleHandler: {other.name} увійшов у тригер. Поточний шар: {LayerMask.LayerToName(other.gameObject.layer)}");
+
+        // Перевірка, чи об'єкт належить до NormalSphereLayer (замість прямого порівняння шарів)
+        // (1 << other.gameObject.layer) створює бітову маску для поточного шару об'єкта.
+        // & NormalSphereLayer виконує побітове "І" з LayerMask.
+        // Якщо результат не 0, значить, шар об'єкта включений у NormalSphereLayer.
         if (((1 << other.gameObject.layer) & NormalSphereLayer) != 0) 
         {
-            // Змінюємо шар об'єкта на FallingSphereLayer.
-            // Mathf.Log(FallingSphereLayer.value, 2) перетворює LayerMask в індекс шару.
-            other.gameObject.layer = (int)Mathf.Log(FallingSphereLayer.value, 2); 
-            Debug.Log($"HoleHandler: Об'єкт '{other.name}' увійшов у дірку. Змінив шар на {LayerMask.LayerToName(other.gameObject.layer)}.");
+            int newLayerIndex = (int)Mathf.Log(FallingSphereLayer.value, 2); // Отримуємо числовий індекс шару
+            other.gameObject.layer = newLayerIndex; 
+            Debug.Log($"HoleHandler: {other.name} шар змінено на {LayerMask.LayerToName(newLayerIndex)}.");
+        }
+        else
+        {
+            Debug.LogWarning($"HoleHandler: {other.name} не на NormalSphereLayer. Поточний шар: {LayerMask.LayerToName(other.gameObject.layer)}.");
         }
     }
 
