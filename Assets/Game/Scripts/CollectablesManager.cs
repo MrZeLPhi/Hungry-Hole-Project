@@ -97,7 +97,7 @@ public class CollectablesManager : MonoBehaviour
                 MeshRenderer objRenderer = other.GetComponent<MeshRenderer>();
                 if (objRenderer != null)
                 {
-                    objRenderer.enabled = false;
+                    objRenderer.enabled = true;
                 }
                 
                 StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay));

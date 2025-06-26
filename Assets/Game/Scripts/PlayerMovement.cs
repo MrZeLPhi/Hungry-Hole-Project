@@ -1,55 +1,65 @@
 using UnityEngine;
 
+
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5.0f; // Швидкість пересування
     [Tooltip("Швидкість, з якою гравець обертається в напрямку руху.")]
-    public float rotationSmoothTime = 0.1f; // Час для плавного обертання
+    public float rotationSmoothTime = 0.1f; 
 
-    private Vector3 moveDirection; // Зберігаємо напрямок руху для обертання
-    private float rotationVelocity; // Допоміжна змінна для плавного обертання (SmoothDampAngle)
+    // <<< НОВЕ ПОЛЕ: ПОСИЛАННЯ НА ВАШ ДЖОЙСТИК >>>
+    [Header("Joystick Control")]
+    [Tooltip("Перетягніть сюди ваш Joystick UI елемент з Canvas.")]
+    public Joystick joystick; // Посилання на компонент Joystick з пакета
+
+    private Vector3 moveDirection; 
+    private float rotationVelocity; 
 
     void Update()
     {
         HandleMovement();
-        HandleRotation(); // <<< НОВИЙ ВИКЛИК: Обробка обертання
+        HandleRotation(); 
     }
 
     void HandleMovement()
     {
-        float horizontalInput = Input.GetAxis("Horizontal"); 
-        float verticalInput = Input.GetAxis("Vertical");   
+        // <<< ЗМІНА ТУТ: Отримуємо вхідні дані з джойстика >>>
+        // Перевіряємо, чи призначено джойстик, щоб уникнути помилок NullReferenceException
+        float horizontalInput = 0f;
+        float verticalInput = 0f;
 
-        // Важливо: обчислюємо напрямок руху на основі глобальних осей,
-        // щоб обертання гравця не впливало на WASD-керування
-        // Vector3.right - глобальна вісь X
-        // Vector3.forward - глобальна вісь Z
+        if (joystick != null)
+        {
+            horizontalInput = joystick.Horizontal; // Отримуємо горизонтальний ввід з джойстика
+            verticalInput = joystick.Vertical;     // Отримуємо вертикальний ввід з джойстика
+        }
+        else
+        {
+            // Якщо джойстик не призначений, можна використовувати клавіатуру як запасний варіант
+            horizontalInput = Input.GetAxis("Horizontal"); 
+            verticalInput = Input.GetAxis("Vertical");
+            // Debug.LogWarning("PlayerMovement: Джойстик не призначений! Використовуються вхідні дані з клавіатури.");
+        }
+        // <<< КІНЕЦЬ ЗМІНИ ВВОДУ >>>
+
+
         moveDirection = Vector3.right * horizontalInput + Vector3.forward * verticalInput;
 
-        // Нормалізуємо вектор, щоб швидкість не була вищою при русі по діагоналі
         if (moveDirection.magnitude > 1.0f)
         {
             moveDirection.Normalize();
         }
 
-        // Переміщаємо гравця
         transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
     }
 
     void HandleRotation()
     {
-        // Якщо гравець рухається (величина вектора руху більша за невеликий поріг)
-        if (moveDirection.magnitude >= 0.1f) // Використовуємо 0.1f, щоб уникнути обертання при незначних рухах
+        if (moveDirection.magnitude >= 0.1f) 
         {
-            // Розраховуємо кут, в який має дивитися об'єкт
-            // Mathf.Atan2 повертає кут у радіанах, тому множимо на Mathf.Rad2Deg для градусів
             float targetAngle = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
 
-            // Плавно обертаємо об'єкт до цього кута навколо осі Y
-            // transform.eulerAngles.y - поточний кут об'єкта по Y
-            // rotationVelocity - допоміжна змінна, яка використовується SmoothDampAngle
-            // rotationSmoothTime - час, за який відбувається згладжування обертання
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref rotationVelocity, rotationSmoothTime);
             
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
