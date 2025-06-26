@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     [Header("UI References")]
     public TextMeshProUGUI scoreText; // Посилання на текстовий елемент для очок
     public TextMeshProUGUI sizeText;  // Посилання на текстовий елемент для розміру/діаметра
+    
 
     void OnEnable()
     {

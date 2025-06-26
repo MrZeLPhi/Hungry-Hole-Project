@@ -3320,6 +3320,7 @@ MonoBehaviour:
   FallingSphereLayer:
     serializedVersion: 2
     m_Bits: 128
+  bounceForce: 3
 --- !u!135 &881493632
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -3696,8 +3697,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.787, y: 1.296, z: 1.57}
-  m_Center: {x: -0.121, y: -0.93, z: -0.02}
+  m_Size: {x: 1.787, y: 1.8930397, z: 1.57}
+  m_Center: {x: -0.12100005, y: -1.715992, z: -0.01999998}
 --- !u!114 &1149174339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3714,6 +3715,10 @@ MonoBehaviour:
   growthMultiplier: 0.01
   destroyDelay: 2
   sizeComparisonTolerance: 0.2
+  forcedFallSpeed: 0.5
+  fallingObjectsLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &1149174340
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,22 +1,19 @@
 using UnityEngine;
 using System.Collections;
-// using UnityEngine.UI; // <<< Цей рядок більше не потрібен тут!
+// using System.Collections.Generic; // HashSet більше не потрібен
 
 public class CollectablesManager : MonoBehaviour
 {
     // ----- EVENTS -----
-    // Статичні події, на які можуть підписуватися інші класи.
-    // 'static' означає, що до них можна звертатися напряму через CollectablesManager.OnScoreChanged.
-    // 'Action<int>' означає, що подія передає одне ціле число (нові очки).
-    // 'Action<float>' означає, що подія передає одне число з плаваючою комою (новий розмір).
     public static event System.Action<int> OnScoreChanged;
     public static event System.Action<float> OnSizeChanged;
     // ------------------
 
     [Header("Hole Growth Settings")]
     public float initialHoleSize = 1.0f; 
-    private float _currentHoleSize; // Змінено на private
-    public float currentHoleSize // Публічний геттер, який викликає подію при зміні
+    
+    private float _currentHoleSize; 
+    public float currentHoleSize 
     {
         get { return _currentHoleSize; }
         private set
@@ -24,20 +21,24 @@ public class CollectablesManager : MonoBehaviour
             if (_currentHoleSize != value)
             {
                 _currentHoleSize = value;
-                // Викликаємо подію OnSizeChanged, передаючи новий розмір
                 OnSizeChanged?.Invoke(_currentHoleSize);
+                Debug.Log($"CollectablesManager: Розмір отвору оновлено до: {_currentHoleSize:F2}. Подія OnSizeChanged викликана.");
             }
         }
     }
     public float growthMultiplier = 0.01f;
 
     [Header("Collectable Settings")]
-    public float destroyDelay = 4.0f;
-    public float sizeComparisonTolerance = 0.1f;
+    [Tooltip("Час до остаточного знищення об'єкта після його поглинання (в секундах).")]
+    public float destroyDelay = 4.0f; 
+
+    [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору. " +
+             "Об'єкт вважається меншим, якщо його розмір менший за розмір отвору МІНУС цей допуск.")]
+    public float sizeComparisonTolerance = 0.1f; 
 
     [Header("Score Settings")]
-    private int _totalScore = 0; // Змінено на private
-    public int totalScore // Публічний геттер, який викликає подію при зміні
+    private int _totalScore = 0; 
+    public int totalScore 
     {
         get { return _totalScore; }
         private set
@@ -45,50 +46,58 @@ public class CollectablesManager : MonoBehaviour
             if (_totalScore != value)
             {
                 _totalScore = value;
-                // Викликаємо подію OnScoreChanged, передаючи нові очки
                 OnScoreChanged?.Invoke(_totalScore);
+                Debug.Log($"CollectablesManager: Очки оновлено до: {_totalScore}. Подія OnScoreChanged викликана.");
             }
         }
     }
 
-    // <<< Видаляємо посилання на UI Text, бо тепер це відповідальність UI Manager'а >>>
-    // public Text scoreText;
-    // public Text sizeText;
+    // <<< ВИДАЛЯЄМО ВЕСЬ РОЗДІЛ "Forced Fall Settings" та related code >>>
+    // [Header("Forced Fall Settings")]
+    // public float forcedFallSpeed = 0.5f; 
+    // public LayerMask fallingObjectsLayer; 
+    // private HashSet<GameObject> fallingObjectsSet = new HashSet<GameObject>();
 
-    void Awake() // Використовуємо Awake, щоб переконатися, що ініціалізація відбувається раніше Start
+    void Awake() 
     {
-        // Встановлюємо початковий розмір отвору, зберігаючи Y-розмір незмінним
-        transform.localScale = new Vector3(initialHoleSize, transform.localScale.y, initialHoleSize);
-        currentHoleSize = initialHoleSize; // Це викличе OnSizeChanged
-
+        currentHoleSize = initialHoleSize; 
+        transform.localScale = new Vector3(currentHoleSize, transform.localScale.y, currentHoleSize);
+        totalScore = 0; 
         Debug.Log("CollectablesManager: Ініціалізація завершена.");
     }
 
+    // <<< МЕТОД Update() тепер не потрібен, якщо немає ApplyForcedFall() >>>
+    // void Update()
+    // {
+    //     ApplyForcedFall();
+    // }
+
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"CollectablesManager: Об'єкт '{other.name}' увійшов у тригер.");
+        Debug.Log($"CollectablesManager: Об'єкт '{other.name}' увійшов у тригер CollectablesManager.");
 
         Collectable collectable = other.GetComponent<Collectable>();
 
         if (collectable != null && other.gameObject != this.gameObject)
         {
-            if (other.transform.localScale.x < currentHoleSize - sizeComparisonTolerance)
+            if (other.transform.localScale.x < currentHoleSize - sizeComparisonTolerance) 
             {
                 Debug.Log($"CollectablesManager: Об'єкт '{other.name}' поглинається.");
 
-                totalScore += collectable.scoreValue; // Це викличе OnScoreChanged
-
-                currentHoleSize += (collectable.scoreValue * growthMultiplier); // Це викличе OnSizeChanged
+                totalScore += collectable.scoreValue; 
+                currentHoleSize += (collectable.scoreValue * growthMultiplier); 
                 transform.localScale = new Vector3(currentHoleSize, transform.localScale.y, currentHoleSize);
 
-                // UI оновлюється автоматично через події, тому цей виклик більше не потрібен
-                // UpdateUI(); 
-
-                other.enabled = false;
+                // Вимикаємо візуалізацію та коллайдер ОДРАЗУ, щоб він "провалювався"
+                Collider objCollider = other.GetComponent<Collider>();
+                if (objCollider != null)
+                {
+                    objCollider.enabled = false;
+                }
                 MeshRenderer objRenderer = other.GetComponent<MeshRenderer>();
                 if (objRenderer != null)
                 {
-                    objRenderer.enabled = true;
+                    objRenderer.enabled = false;
                 }
                 
                 StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay));
@@ -104,21 +113,23 @@ public class CollectablesManager : MonoBehaviour
         }
     }
 
+    // <<< МЕТОД ApplyForcedFall() ПОВНІСТЮ ВИДАЛЯЄМО >>>
+    // void ApplyForcedFall() { ... }
+
     IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay)
     {
         Debug.Log($"CollectablesManager: Корутина 'DestroyAfterDelay' для об'єкта '{objToDestroy.name}' розпочалася. Затримка: {delay} с.");
+
         yield return new WaitForSeconds(delay); 
+        
         if (objToDestroy != null)
         {
             Destroy(objToDestroy);
-            Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено.");
+            Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено після затримки {delay} с.");
         }
         else
         {
             Debug.LogWarning($"CollectablesManager: Спроба знищити об'єкт, який вже дорівнює null.");
         }
     }
-
-    // <<< Цей метод UpdateUI більше не потрібен тут! >>>
-    // void UpdateUI() { ... }
 }
