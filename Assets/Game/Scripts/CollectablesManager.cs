@@ -12,48 +12,22 @@ public class CollectablesManager : MonoBehaviour
     [Tooltip("Посилання на Transform основного об'єкта гравця (дірки), розмір якого буде змінюватися.")]
     public Transform playerHoleTransform; 
 
-    [Header("Hole Growth Settings")]
-    public float initialHoleSize = 1.0f; 
-    
-    private float _currentHoleSize; 
-    public float currentHoleSize 
-    {
-        get { return _currentHoleSize; }
-        private set
-        {
-            if (_currentHoleSize != value)
-            {
-                _currentHoleSize = value;
-                OnSizeChanged?.Invoke(_currentHoleSize);
-                Debug.Log($"CollectablesManager: Розмір отвору оновлено до: {_currentHoleSize:F2}. Подія OnSizeChanged викликана.");
-            }
-        }
-    }
-    public float growthMultiplier = 0.01f;
+    [Header("Game Progression Reference")]
+    [Tooltip("Посилання на GameProgressionManager на сцені.")]
+    public GameProgressionManager gameProgressionManager; 
 
     [Header("Collectable Settings")]
     [Tooltip("Час до остаточного знищення об'єкта після його поглинання (в секундах).")]
     public float destroyDelay = 4.0f; 
 
-    // sizeComparisonTolerance тепер має менше значення тут, бо об'єкти вже мають бути поглинуті
-    [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору. (Менш критично для цього тригера).")]
-    public float sizeComparisonTolerance = 0.1f; 
+    // <<< ВИДАЛЕНО: sizeComparisonTolerance, оскільки перевірка розміру більше не потрібна >>>
+    // [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору.")]
+    // public float sizeComparisonTolerance = 0.1f; 
 
-    [Header("Score Settings")]
-    private int _totalScore = 0; 
-    public int totalScore 
-    {
-        get { return _totalScore; }
-        private set
-        {
-            if (_totalScore != value)
-            {
-                _totalScore = value;
-                OnScoreChanged?.Invoke(_totalScore);
-                Debug.Log($"CollectablesManager: Очки оновлено до: {_totalScore}. Подія OnScoreChanged викликана.");
-            }
-        }
-    }
+    // Очки та поточний розмір тепер керовані GameProgressionManager
+    // [Header("Score Settings")]
+    // private int _totalScore = 0; 
+    // public int totalScore { get { return _totalScore; } private set { ... } }
 
     void Awake() 
     {
@@ -63,10 +37,17 @@ public class CollectablesManager : MonoBehaviour
             enabled = false;
             return;
         }
-
-        playerHoleTransform.localScale = new Vector3(initialHoleSize, playerHoleTransform.localScale.y, initialHoleSize);
-        currentHoleSize = initialHoleSize; 
-        totalScore = 0; 
+        
+        if (gameProgressionManager == null)
+        {
+            gameProgressionManager = FindObjectOfType<GameProgressionManager>();
+            if (gameProgressionManager == null)
+            {
+                Debug.LogError("CollectablesManager: GameProgressionManager не знайдено на сцені! Система прогресу не працюватиме.");
+                enabled = false;
+                return;
+            }
+        }
 
         Debug.Log("CollectablesManager: Ініціалізація завершена.");
     }
@@ -77,22 +58,29 @@ public class CollectablesManager : MonoBehaviour
 
         Collectable collectable = other.GetComponent<Collectable>();
 
-        if (collectable != null && other.gameObject != null) 
+        if (collectable != null && other.gameObject != null && gameProgressionManager != null) 
         {
+            // <<< ВИДАЛЕНО: Перевірка розміру об'єкта. Тепер будь-який Collectable, який доходить до DestroyZone, поглинається. >>>
+            // if (other.transform.localScale.x < gameProgressionManager.PlayerCurrentSize - sizeComparisonTolerance) 
+            
             Debug.Log($"CollectablesManager: Об'єкт '{other.name}' ПОГЛИНУТО (фінальний етап).");
 
-            totalScore += collectable.scoreValue; 
-            currentHoleSize += (collectable.scoreValue * growthMultiplier); 
-            playerHoleTransform.localScale = new Vector3(currentHoleSize, playerHoleTransform.localScale.y, currentHoleSize);
+            gameProgressionManager.AddPoints(collectable.scoreValue); 
 
             // Об'єкт залишається видимим, поки не закінчиться destroyDelay.
             // Приховування відбувається в корутині DestroyAfterDelay, перед самим знищенням.
             
             StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay));
+            // <<< КІНЕЦЬ ВИДАЛЕННЯ: else-блоку від перевірки розміру теж немає >>>
+            // }
+            // else
+            // {
+            //     Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' завеликий для фінального поглинання (за розміром HoleDestroyer).");
+            // }
         }
         else
         {
-            Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' увійшов у Коллайдер Знищення, але не є Collectable або вже знищений.");
+            Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' увійшов у Коллайдер Знищення, але не є Collectable або вже знищений, або немає GameProgressionManager.");
         }
     }
 
@@ -104,7 +92,6 @@ public class CollectablesManager : MonoBehaviour
         
         if (objToDestroy != null)
         {
-            // Приховуємо об'єкт (вимкнення рендерера та коллайдера) безпосередньо перед знищенням
             Collider objCollider = objToDestroy.GetComponent<Collider>();
             if (objCollider != null) 
             {

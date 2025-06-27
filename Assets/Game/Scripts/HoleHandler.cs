@@ -11,16 +11,33 @@ public class HoleHandler : MonoBehaviour
 
    [Header("Bounce Settings")]
    [Tooltip("Сила поштовху вгору, коли об'єкт входить у тригер дірки.")]
-   public float initialBounceForce = 5.0f; // Сила поштовху при вході
+   public float initialBounceForce = 5.0f; 
    
    [Tooltip("Сила постійного поштовху вгору для об'єктів у FallingSphereLayer.")]
-   public float periodicBounceForce = 2.0f; // Сила періодичного поштовху
+   public float periodicBounceForce = 2.0f; 
 
    [Tooltip("Інтервал (у секундах) між постійними поштовхами.")]
-   public float periodicBounceInterval = 1.0f; // Кожну секунду
+   public float periodicBounceInterval = 1.0f; 
+
+   [Header("Game Progression Reference")]
+   [Tooltip("Посилання на GameProgressionManager на сцені.")]
+   public GameProgressionManager gameProgressionManager; 
 
    private float bounceTimer; 
    private HashSet<Rigidbody> bouncingObjects = new HashSet<Rigidbody>();
+
+   void Awake() 
+   {
+       if (gameProgressionManager == null)
+       {
+           gameProgressionManager = FindObjectOfType<GameProgressionManager>();
+           if (gameProgressionManager == null)
+           {
+               Debug.LogError("HoleHandler: GameProgressionManager не знайдено на сцені! Рангова перевірка не працюватиме.");
+               enabled = false;
+           }
+       }
+   }
 
    void FixedUpdate()
    {
@@ -36,32 +53,47 @@ public class HoleHandler : MonoBehaviour
    {
       Debug.Log($"HoleHandler: Об'єкт '{other.name}' увійшов у ТРИГЕР ГОЛОВНОЇ ДІРКИ.");
 
-      if (((1 << other.gameObject.layer) & NormalSphereLayer) != 0) 
+      Collectable collectable = other.GetComponent<Collectable>();
+
+      if (collectable != null && gameProgressionManager != null)
       {
-         int newLayerIndex = (int)Mathf.Log(FallingSphereLayer.value, 2); 
-         other.gameObject.layer = newLayerIndex; 
-         Debug.Log($"HoleHandler: Об'єкт '{other.name}' шар змінено на {LayerMask.LayerToName(newLayerIndex)}.");
+          if (collectable.rank > gameProgressionManager.CurrentLevel)
+          {
+              Debug.Log($"HoleHandler: Об'єкт '{other.name}' (ранг {collectable.rank}) занадто високого рангу для гравця (рівень {gameProgressionManager.CurrentLevel}). Не поглинається.");
+              return; 
+          }
 
-         Rigidbody otherRb = other.GetComponent<Rigidbody>();
-         if (otherRb != null)
-         {
-             otherRb.AddForce(Vector3.up * initialBounceForce, ForceMode.Impulse); 
-             Debug.Log($"HoleHandler: Об'єкту '{other.name}' застосовано ПОЧАТКОВИЙ поштовх вгору з силою {initialBounceForce}.");
+          if (((1 << other.gameObject.layer) & NormalSphereLayer) != 0) 
+          {
+             int newLayerIndex = (int)Mathf.Log(FallingSphereLayer.value, 2); 
+             other.gameObject.layer = newLayerIndex; 
+             Debug.Log($"HoleHandler: Об'єкт '{other.name}' шар змінено на {LayerMask.LayerToName(newLayerIndex)}.");
 
-             if (!bouncingObjects.Contains(otherRb))
+             Rigidbody otherRb = other.GetComponent<Rigidbody>();
+             if (otherRb != null)
              {
-                 bouncingObjects.Add(otherRb);
-                 Debug.Log($"HoleHandler: '{other.name}' додано до списку періодичних поштовхів.");
+                 otherRb.AddForce(Vector3.up * initialBounceForce, ForceMode.Impulse); 
+                 Debug.Log($"HoleHandler: Об'єкту '{other.name}' застосовано ПОЧАТКОВИЙ поштовх вгору з силою {initialBounceForce}.");
+
+                 if (!bouncingObjects.Contains(otherRb))
+                 {
+                     bouncingObjects.Add(otherRb);
+                     Debug.Log($"HoleHandler: '{other.name}' додано до списку періодичних поштовхів.");
+                 }
              }
-         }
-         else
-         {
-             Debug.LogWarning($"HoleHandler: Об'єкт '{other.name}' не має Rigidbody. Неможливо застосувати поштовх вгору.");
-         }
+             else
+             {
+                 Debug.LogWarning($"HoleHandler: Об'єкт '{other.name}' не має Rigidbody. Неможливо застосувати поштовх вгору.");
+             }
+          }
+          else
+          {
+              Debug.Log($"HoleHandler: Об'єкт '{other.name}' вже не на NormalSphereLayer або не цікавий для початкового поштовху.");
+          }
       }
-      else
+      else if (collectable == null)
       {
-          Debug.Log($"HoleHandler: Об'єкт '{other.name}' вже не на NormalSphereLayer або не цікавий для початкового поштовху.");
+          Debug.LogWarning($"HoleHandler: Об'єкт '{other.name}' увійшов у тригер, але не має компонента Collectable.");
       }
    }
 
