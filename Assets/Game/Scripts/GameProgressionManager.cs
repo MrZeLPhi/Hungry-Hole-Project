@@ -1,41 +1,39 @@
 using UnityEngine;
-using System;
-using System.Collections.Generic; // For List<int>
-[System.Serializable] // Дозволяє Unity серіалізувати цей клас і відображати його в Інспекторі
-public class LevelData
-{
-    [Tooltip("Очки, необхідні для переходу з цього рівня на наступний.")]
-    public int pointsRequiredForNextLevel;
-
-    [Tooltip("На скільки збільшиться розмір гравця при досягненні цього рівня.")]
-    public float sizeIncreaseOnLevelUp;
-}
+using System; // Для System.Action
+using System.Collections.Generic; // Для List
 
 public class GameProgressionManager : MonoBehaviour
 {
     // ----- EVENTS -----
-    public static event Action<int> OnLevelChanged;
-    public static event Action<int, int> OnLevelProgressUpdated; // current points, quota
-    public static event Action<float> OnPlayerSizeChanged; // new size
+    public static event Action<int> OnLevelChanged; // Передає новий рівень гравця
+    public static event Action<int, int> OnLevelProgressUpdated; // Передає поточні очки рівня та квоту
+    public static event Action<float> OnPlayerSizeChanged; // Передає новий розмір гравця
 
-    // <<< НОВИЙ КЛАС LevelData (розмістіть його вище цього рядка у файлі) >>>
-    // [System.Serializable]
-    // public class LevelData { /* ... */ }
+    // <<< НОВИЙ ВНУТРІШНІЙ КЛАС ДАНИХ ДЛЯ РІВНЯ >>>
+    [System.Serializable] // Дозволяє Unity серіалізувати цей клас і відображати його в Інспекторі
+    public class LevelData
+    {
+        [Tooltip("Очки, необхідні для переходу з цього рівня на наступний.")]
+        public int pointsRequiredForNextLevel;
+
+        [Tooltip("На скільки збільшиться розмір гравця при досягненні цього рівня.")]
+        public float sizeIncreaseOnLevelUp;
+    }
+    // ----------------------------------------------------
 
     [Header("Player Reference")]
+    [Tooltip("Посилання на Transform основного об'єкта гравця (дірки).")]
     public Transform playerHoleTransform;
 
     [Header("Level Progression Settings")]
     [Tooltip("Початковий рівень гравця.")]
     public int initialLevel = 1;
     
-    // <<< ЗМІНА: Тепер це список об'єктів LevelData >>>
     [Tooltip("Дані для кожного рівня: очки та збільшення розміру. " +
              "Індекс 0 = Дані для Рівня 1, Індекс 1 = Дані для Рівня 2, і т.д.")]
     public List<LevelData> levelProgressionData; // Налаштовуйте цей список в Інспекторі!
-    // <<< ВИДАЛЕНО: basePointsForLevelUp, pointsQuotaGrowthFactor, fixedSizeIncreasePerLevel >>>
 
-    // ----- Поточний стан гравця -----
+    // ----- Поточний стан гравця (використовуємо властивості для виклику подій) -----
     private int _currentLevel;
     public int CurrentLevel
     {
@@ -52,7 +50,7 @@ public class GameProgressionManager : MonoBehaviour
     }
 
     private int _currentLevelPoints;
-    public int CurrentLevelPoints // Points accumulated for the current level
+    public int CurrentLevelPoints // Очки, набрані для поточного рівня
     {
         get { return _currentLevelPoints; }
         private set
@@ -65,8 +63,8 @@ public class GameProgressionManager : MonoBehaviour
         }
     }
 
-    // This property remains for convenience, but its value comes from the list
-    public int PointsForCurrentLevelQuota
+    // Очки, необхідні для поточного рівня, щоб підвищити рівень
+    public int PointsForCurrentLevelQuota 
     {
         get { return GetPointsForCurrentLevelQuota(); }
     }
@@ -80,6 +78,7 @@ public class GameProgressionManager : MonoBehaviour
             if (_playerCurrentSize != value)
             {
                 _playerCurrentSize = value;
+                // Застосовуємо новий розмір до Transform гравця (тільки X та Z)
                 playerHoleTransform.localScale = new Vector3(_playerCurrentSize, playerHoleTransform.localScale.y, _playerCurrentSize);
                 OnPlayerSizeChanged?.Invoke(_playerCurrentSize);
                 Debug.Log($"GameProgressionManager: Розмір гравця оновлено до: {_playerCurrentSize:F2}.");
@@ -89,6 +88,10 @@ public class GameProgressionManager : MonoBehaviour
 
     void Awake()
     {
+        // Встановлюємо цільовий FPS на 60 (для оптимізації)
+        Application.targetFrameRate = 60;
+        Debug.Log("GameProgressionManager: Цільовий FPS встановлено на 60.");
+
         if (playerHoleTransform == null)
         {
             Debug.LogError("GameProgressionManager: playerHoleTransform не призначений! Розмір гравця не буде змінюватися.");
@@ -96,7 +99,6 @@ public class GameProgressionManager : MonoBehaviour
             return;
         }
 
-        // Validate the levelProgressionData list
         if (levelProgressionData == null || levelProgressionData.Count == 0)
         {
             Debug.LogError("GameProgressionManager: Список 'Level Progression Data' порожній або не призначений! Будь ласка, налаштуйте його в Інспекторі.");
@@ -104,14 +106,13 @@ public class GameProgressionManager : MonoBehaviour
             return;
         }
 
-        // Initialize values
+        // Ініціалізація початкових значень
         CurrentLevel = initialLevel;
-        if (CurrentLevel < 1) CurrentLevel = 1; 
+        if (CurrentLevel < 1) CurrentLevel = 1; // Забезпечуємо, що рівень починається щонайменше з 1
         
         CurrentLevelPoints = 0; 
         PlayerCurrentSize = playerHoleTransform.localScale.x; 
 
-        // Initial UI update is handled by UIManager.Start/Awake subscribing to events
         Debug.Log("GameProgressionManager: Ініціалізація системи прогресу завершена.");
     }
 
@@ -120,27 +121,26 @@ public class GameProgressionManager : MonoBehaviour
         CurrentLevelPoints += pointsToAdd;
         Debug.Log($"GameProgressionManager: Додано {pointsToAdd} очок. Поточний прогрес: {CurrentLevelPoints}/{GetPointsForCurrentLevelQuota()}");
 
-        // Check if there are more levels defined and if quota is met
+        // Перевіряємо, чи досягнуто квоту для підвищення рівня, і чи є ще визначені рівні
         if (CurrentLevel < levelProgressionData.Count && CurrentLevelPoints >= GetPointsForCurrentLevelQuota())
         {
             LevelUp();
         }
-        else if (CurrentLevel >= levelProgressionData.Count) // Max level reached
+        else if (CurrentLevel >= levelProgressionData.Count) // Якщо досягнуто максимальний визначений рівень
         {
             Debug.Log($"GameProgressionManager: Максимальний рівень ({CurrentLevel}) досягнуто!");
-            CurrentLevelPoints = GetPointsForCurrentLevelQuota(); // Cap points for display
+            CurrentLevelPoints = GetPointsForCurrentLevelQuota(); // Залишаємо очки на максимумі для відображення
         }
     }
 
     private void LevelUp()
     {
-        // Get the size increase amount for the current level (before incrementing CurrentLevel)
-        // Adjust index for 0-based list (Level 1 uses index 0, Level 2 uses index 1, etc.)
+        // Індекс поточного рівня в списку (0-базовий)
         int currentLevelIndex = CurrentLevel - 1; 
 
         if (currentLevelIndex >= 0 && currentLevelIndex < levelProgressionData.Count)
         {
-            // Apply size increase from the data of the level just completed
+            // Застосовуємо збільшення розміру, визначене для щойно завершеного рівня
             PlayerCurrentSize += levelProgressionData[currentLevelIndex].sizeIncreaseOnLevelUp;
         }
         else
@@ -148,17 +148,15 @@ public class GameProgressionManager : MonoBehaviour
             Debug.LogWarning($"GameProgressionManager: Дані для рівня {CurrentLevel} не знайдено! Розмір не збільшено.");
         }
 
-        CurrentLevel++; // Increase level
-        CurrentLevelPoints = 0; // Reset points for the new level
+        CurrentLevel++; // Збільшуємо рівень
+        CurrentLevelPoints = 0; // Обнуляємо очки для нового рівня
 
         Debug.Log($"GameProgressionManager: *** РІВЕНЬ ПІДВИЩЕНО! Новий рівень: {CurrentLevel}, Нова квота: {GetPointsForCurrentLevelQuota()} ***");
     }
 
-    // Helper to get points required for the current level to level up
-    // This method is now PUBLIC, as UIManager needs to access it directly.
-    public int GetPointsForCurrentLevelQuota() 
+    // Допоміжна функція для отримання квоти очок для поточного рівня
+    public int GetPointsForCurrentLevelQuota() // Зроблено public для доступу з UIManager
     {
-        // Adjust index for 0-based list
         int listIndex = CurrentLevel - 1; 
 
         if (listIndex >= 0 && listIndex < levelProgressionData.Count)
@@ -167,9 +165,9 @@ public class GameProgressionManager : MonoBehaviour
         }
         else if (levelProgressionData.Count > 0)
         {
-            // If we're past the defined levels, use the quota of the last defined level
+            // Якщо поточний рівень перевищує кількість визначених рівнів, використовуємо квоту останнього визначеного рівня
             return levelProgressionData[levelProgressionData.Count - 1].pointsRequiredForNextLevel;
         }
-        return 999999; // Fallback to a very high number if no quotas are defined
+        return 999999; // Запасний варіант: дуже високе значення, якщо квоти не визначені
     }
 }

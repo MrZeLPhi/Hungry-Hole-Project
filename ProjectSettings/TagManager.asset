@@ -14,9 +14,9 @@ TagManager:
   - NormalSphereLayer
   - FallingSphereLayer
   - Ground
-  - 
-  - 
-  - 
+  - Obstacle
+  - DestroyZone
+  - PlayerHole
   - 
   - 
   - 
