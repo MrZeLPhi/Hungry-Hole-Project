@@ -14,15 +14,13 @@ public class CollectablesManager : MonoBehaviour
 
     [Header("References")]
     public GameProgressionManager gameProgressionManager;
+    public PlayerMovement playerMovement; // Для зупинки гравця при перемозі
     public UIManager uiManager; 
 
     // Зберігаємо посилання на НАЙВИЩИЙ за рангом об'єкт
-    // Тепер він публічний, щоб HoleHandler міг до нього звертатися
-    public Collectable HighestRankCollectableTarget { get; private set; } 
+    private Collectable highestRankCollectableTarget; 
 
-    [Header("Physics Settings")] 
-    [Tooltip("Коллайдер землі, з яким буде скасовано ігнорування колізій перед знищенням об'єкта.")]
-    public Collider groundCollider; 
+    // <<< ВИДАЛЕНО: Physics Settings та groundCollider >>>
 
 
     void Awake()
@@ -36,6 +34,15 @@ public class CollectablesManager : MonoBehaviour
                 enabled = false;
             }
         }
+        if (playerMovement == null)
+        {
+            playerMovement = FindObjectOfType<PlayerMovement>();
+            if (playerMovement == null)
+            {
+                Debug.LogError("CollectablesManager: PlayerMovement не знайдено на сцені!");
+                enabled = false;
+            }
+        }
         if (uiManager == null)
         {
             uiManager = FindObjectOfType<UIManager>();
@@ -45,10 +52,7 @@ public class CollectablesManager : MonoBehaviour
                 enabled = false;
             }
         }
-        if (groundCollider == null) 
-        {
-            Debug.LogError("CollectablesManager: Ground Collider не призначений! Колізії з землею можуть не бути скинуті перед знищенням об'єкта.");
-        }
+        // <<< ВИДАЛЕНО: Перевірку groundCollider >>>
     }
 
     void Start()
@@ -62,11 +66,11 @@ public class CollectablesManager : MonoBehaviour
 
         if (allCollectables.Length > 0)
         {
-            HighestRankCollectableTarget = allCollectables.OrderByDescending(c => c.rank).FirstOrDefault(); 
+            highestRankCollectableTarget = allCollectables.OrderByDescending(c => c.rank).FirstOrDefault(); 
 
-            if (HighestRankCollectableTarget != null)
+            if (highestRankCollectableTarget != null)
             {
-                Debug.Log($"CollectablesManager: Глобальна ціль: з'їсти об'єкт '{HighestRankCollectableTarget.name}' з НАЙВИЩИМ рангом {HighestRankCollectableTarget.rank}");
+                Debug.Log($"CollectablesManager: Глобальна ціль: з'їсти об'єкт '{highestRankCollectableTarget.name}' з НАЙВИЩИМ рангом {highestRankCollectableTarget.rank}");
             }
             else
             {
@@ -79,33 +83,72 @@ public class CollectablesManager : MonoBehaviour
         }
     }
 
-    // Цей OnTriggerEnter тепер обробляє тільки НЕ-цільові об'єкти.
-    // Цільові об'єкти обробляються в HoleHandler.
+
     void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"CollectablesManager: Об'єкт '{other.name}' увійшов у ТРИГЕР ЗНИЩЕННЯ (HoleDestroyer).");
+
         Collectable collectable = other.GetComponent<Collectable>();
 
-        // Перевіряємо, чи це не цільовий об'єкт.
-        if (collectable != null && collectable != HighestRankCollectableTarget && other.gameObject != null && gameProgressionManager != null) 
+        if (collectable != null && other.gameObject != null && gameProgressionManager != null) 
         {
-            Debug.Log($"CollectablesManager: Об'єкт '{other.name}' (не цільовий) увійшов у ТРИГЕР ЗНИЩЕННЯ.");
-
             if (other.transform.localScale.x > gameProgressionManager.PlayerCurrentSize + 0.1f) 
             {
                 Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' (розмір X: {other.transform.localScale.x}) досяг знищувача, але візуально завеликий для поточного розміру дірки ({gameProgressionManager.PlayerCurrentSize:F2}).");
             }
             
             Debug.Log($"CollectablesManager: Об'єкт '{other.name}' ПОГЛИНУТО (фінальний етап).");
+
             gameProgressionManager.AddPoints(collectable.scoreValue); 
-            StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay)); 
+
+            if (collectable == highestRankCollectableTarget) 
+            {
+                Debug.Log("CollectablesManager: Глобальну ціль досягнуто! Об'єкт з'їдений. Готуємо перемогу.");
+                // Запускаємо корутину для цільового об'єкта
+                StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay, true)); 
+            } else {
+                // Для нецільових об'єктів - звичайне знищення
+                StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay, false)); 
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' увійшов у Коллайдер Знищення, але не є Collectable або вже знищений, або немає GameProgressionManager.");
         }
     }
 
-    // Корутина для знищення об'єктів (викликається як для звичайних, так і для цільових)
-    public IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay) // Зроблено public
+    // Корутина для знищення об'єктів
+    IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay, bool isWinTarget)
     {
-        Debug.Log($"CollectablesManager: Корутина 'DestroyAfterDelay' для об'єкта '{objToDestroy.name}' розпочалася. Затримка: {delay} с.");
+        Debug.Log($"CollectablesManager: Корутина 'DestroyAfterDelay' для об'єкта '{objToDestroy.name}' розпочалася. Затримка: {delay} с. Ціль перемоги: {isWinTarget}");
 
+        // Якщо це цільовий об'єкт (перемога), вимикаємо рух гравця та робимо його некінематичним для падіння
+        if (isWinTarget)
+        {
+            if (playerMovement != null && playerMovement.enabled) // Перевірка, чи рух гравця ще увімкнений
+            {
+                playerMovement.enabled = false; // Вимкнення джойстика
+                Debug.Log("CollectablesManager: Рух гравця (джойстик) вимкнено для фінального падіння цільового об'єкта.");
+            }
+
+            Rigidbody collectedRb = objToDestroy.GetComponent<Rigidbody>();
+            if (collectedRb != null)
+            {
+                collectedRb.isKinematic = false; 
+                collectedRb.useGravity = true;   
+                collectedRb.linearVelocity = Vector3.zero; 
+                collectedRb.angularVelocity = Vector3.zero; 
+                Debug.Log($"CollectablesManager: Забезпечено падіння об'єкта '{objToDestroy.name}' після перемоги.");
+            }
+            else
+            {
+                Debug.LogWarning($"CollectablesManager: Зібраний об'єкт '{objToDestroy.name}' не має Rigidbody, не може падати. Перемога буде оброблена без падіння.");
+                EndGameWin(); // Якщо не може падати, фіналізуємо одразу
+                yield break; 
+            }
+        }
+
+        // Чекаємо затримку (Time.timeScale ще не дорівнює 0)
         yield return new WaitForSeconds(delay); 
         
         if (objToDestroy != null)
@@ -125,16 +168,26 @@ public class CollectablesManager : MonoBehaviour
             
             Destroy(objToDestroy);
             Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено після затримки {delay} с.");
+            
+            // Фіналізуємо перемогу, якщо це цільовий об'єкт
+            if (isWinTarget)
+            {
+                EndGameWin(); 
+            }
         }
         else
         {
             Debug.LogWarning($"CollectablesManager: Спроба знищити об'єкт, який вже дорівнює null.");
+            if (isWinTarget)
+            {
+                EndGameWin(); 
+            }
         }
     }
 
-    // Фіналізація перемоги (зупинка гри та показ панелі)
-    public void EndGameWin() // Зроблено public
+    void EndGameWin()
     {
+        // Зупиняємо гру повністю
         Time.timeScale = 0f;
         Debug.Log("CollectablesManager: Гра зупинена (Time.timeScale = 0).");
 

@@ -31,7 +31,6 @@ public class UIManager : MonoBehaviour
                 enabled = false;
             }
         }
-        // Переконайтеся, що панель виграшу вимкнена на старті
         if (winPanel != null)
         {
             winPanel.SetActive(false);

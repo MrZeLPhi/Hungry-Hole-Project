@@ -6222,13 +6222,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 775a77b302a1aa2449028e53cd6ac003, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collectableSpawnRadius: 50
+  collectableSpawnRadius: 1
   maxCollectablesOnScreen: 20
-  destroyDelay: 4
+  destroyDelay: 7
   gameProgressionManager: {fileID: 1569515949}
-  playerMovement: {fileID: 0}
-  uiManager: {fileID: 0}
-  groundCollider: {fileID: 0}
+  playerMovement: {fileID: 2029975854}
+  uiManager: {fileID: 2029975852}
 --- !u!65 &300864152
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8558,7 +8557,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 59bed494b7447d142a5b6d00c6d034bf, type: 2}
+  - {fileID: 2100000, guid: 7183eb9b2e5fd6d40aaf423aa0cdec2c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -18487,7 +18486,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!65 &940827857
 BoxCollider:
@@ -23440,7 +23439,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 59bed494b7447d142a5b6d00c6d034bf, type: 2}
+  - {fileID: 2100000, guid: 7183eb9b2e5fd6d40aaf423aa0cdec2c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -27383,7 +27382,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 59bed494b7447d142a5b6d00c6d034bf, type: 2}
+  - {fileID: 2100000, guid: 7183eb9b2e5fd6d40aaf423aa0cdec2c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -28843,7 +28842,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerHoleTransform: {fileID: 2029975855}
-  initialLevel: 8
+  initialLevel: 1
   levelProgressionData:
   - pointsRequiredForNextLevel: 5
     sizeIncreaseOnLevelUp: 0.2
@@ -32378,9 +32377,9 @@ MonoBehaviour:
   FallingSphereLayer:
     serializedVersion: 2
     m_Bits: 128
-  initialBounceForce: 0.7
-  periodicBounceForce: 0.7
-  periodicBounceInterval: 0.4
+  initialBounceForce: 0.39
+  periodicBounceForce: 0.82
+  periodicBounceInterval: 2.93
   gameProgressionManager: {fileID: 1569515949}
 --- !u!135 &1824896408
 SphereCollider:
