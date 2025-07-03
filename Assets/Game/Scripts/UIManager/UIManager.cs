@@ -5,12 +5,15 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI levelText;           // "Рівень: X"
-    public TextMeshProUGUI currentLevelDisplay; // Для відображення поточного рівня гравця окремо
-    public TextMeshProUGUI currentPointsDisplay; // Для відображення поточних очок гравця окремо
-    public TextMeshProUGUI scoreQuotaText;      // "Y/Z" (поточні очки / квота)
-    public TextMeshProUGUI sizeText;            // Діаметр (якщо ви його ще використовуєте)
+    public TextMeshProUGUI levelText;           
+    public TextMeshProUGUI currentLevelDisplay; 
+    public TextMeshProUGUI currentPointsDisplay; 
+    public TextMeshProUGUI scoreQuotaText;      
+    public TextMeshProUGUI sizeText;            
     public Slider levelProgressBar;         
+
+    [Header("Game Timer UI")] // <<< НОВИЙ РОЗДІЛ
+    public TextMeshProUGUI timerText; // Текст для відображення таймера
 
     [Header("Game Progression Reference")]
     [Tooltip("Посилання на GameProgressionManager на сцені. ПОВИННО БУТИ ПРИЗНАЧЕНО В ІНСПЕКТОРІ!")]
@@ -18,7 +21,11 @@ public class UIManager : MonoBehaviour
 
     [Header("Win Panel")]
     [Tooltip("Панель, яка з'явиться при виграші. Перетягніть сюди ваш GameObject WinPanel.")]
-    public GameObject winPanel; // Панель виграшу
+    public GameObject winPanel; 
+    
+    [Header("Lose Panel")] // <<< НОВИЙ РОЗДІЛ
+    [Tooltip("Панель, яка з'явиться при програші. Перетягніть сюди ваш GameObject LosePanel.")]
+    public GameObject losePanel; // Панель програшу
 
     void Awake()
     {
@@ -35,6 +42,11 @@ public class UIManager : MonoBehaviour
         {
             winPanel.SetActive(false);
         }
+        // Переконайтеся, що панель програшу вимкнена на старті
+        if (losePanel != null) // <<< НОВЕ
+        {
+            losePanel.SetActive(false);
+        }
     }
 
     void OnEnable()
@@ -44,6 +56,8 @@ public class UIManager : MonoBehaviour
             GameProgressionManager.OnLevelChanged += UpdateLevelDisplay;
             GameProgressionManager.OnLevelProgressUpdated += UpdateScoreAndQuotaDisplays; 
             GameProgressionManager.OnPlayerSizeChanged += UpdateSizeDisplay; 
+            GameProgressionManager.OnTimerUpdated += UpdateTimerDisplay; // <<< НОВЕ: Підписуємося на оновлення таймера
+            GameProgressionManager.OnGameLost += ShowLosePanel; // <<< НОВЕ: Підписуємося на подію програшу
             Debug.Log("UIManager: Підписано на події GameProgressionManager.");
         }
     }
@@ -55,6 +69,8 @@ public class UIManager : MonoBehaviour
             GameProgressionManager.OnLevelChanged -= UpdateLevelDisplay;
             GameProgressionManager.OnLevelProgressUpdated -= UpdateScoreAndQuotaDisplays;
             GameProgressionManager.OnPlayerSizeChanged -= UpdateSizeDisplay;
+            GameProgressionManager.OnTimerUpdated -= UpdateTimerDisplay; // <<< НОВЕ
+            GameProgressionManager.OnGameLost -= ShowLosePanel; // <<< НОВЕ
             Debug.Log("UIManager: Відписано від подій GameProgressionManager.");
         }
     }
@@ -66,6 +82,7 @@ public class UIManager : MonoBehaviour
             UpdateLevelDisplay(gameProgressionManager.CurrentLevel);
             UpdateScoreAndQuotaDisplays(gameProgressionManager.CurrentLevelPoints, gameProgressionManager.GetPointsForCurrentLevelQuota());
             UpdateSizeDisplay(gameProgressionManager.PlayerCurrentSize);
+            UpdateTimerDisplay(gameProgressionManager.gameDurationInSeconds); // <<< НОВЕ: Ініціалізуємо таймер
         }
         else 
         {
@@ -76,6 +93,7 @@ public class UIManager : MonoBehaviour
             if (scoreQuotaText != null) scoreQuotaText.text = "ERR/ERR"; 
             if (sizeText != null) sizeText.text = "Діаметр: ERR"; 
             if (levelProgressBar != null) levelProgressBar.value = 0;
+            if (timerText != null) timerText.text = "00:00"; // <<< НОВЕ
         }
         
         if (levelProgressBar != null) levelProgressBar.minValue = 0;
@@ -124,6 +142,17 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // <<< НОВИЙ МЕТОД ДЛЯ ОНОВЛЕННЯ ТАЙМЕРА >>>
+    private void UpdateTimerDisplay(float timeRemaining)
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(timeRemaining / 60);
+            int seconds = Mathf.FloorToInt(timeRemaining % 60);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
+    }
+
     public void ShowWinPanel()
     {
         if (winPanel != null)
@@ -134,6 +163,20 @@ public class UIManager : MonoBehaviour
         else
         {
             Debug.LogError("UIManager: Win Panel не призначено в Інспекторі! Неможливо показати.");
+        }
+    }
+
+    // <<< НОВИЙ МЕТОД: Показати панель програшу >>>
+    public void ShowLosePanel()
+    {
+        if (losePanel != null)
+        {
+            losePanel.SetActive(true);
+            Debug.Log("UIManager: Панель програшу активована.");
+        }
+        else
+        {
+            Debug.LogError("UIManager: Lose Panel не призначено в Інспекторі! Неможливо показати.");
         }
     }
 }

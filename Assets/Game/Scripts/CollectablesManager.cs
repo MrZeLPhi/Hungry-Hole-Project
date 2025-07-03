@@ -14,13 +14,15 @@ public class CollectablesManager : MonoBehaviour
 
     [Header("References")]
     public GameProgressionManager gameProgressionManager;
-    public PlayerMovement playerMovement; // Для зупинки гравця при перемозі
+    public PlayerMovement playerMovement; 
     public UIManager uiManager; 
 
     // Зберігаємо посилання на НАЙВИЩИЙ за рангом об'єкт
     private Collectable highestRankCollectableTarget; 
 
-    // <<< ВИДАЛЕНО: Physics Settings та groundCollider >>>
+    [Header("Physics Settings")] 
+    [Tooltip("Коллайдер землі, з яким буде скасовано ігнорування колізій перед знищенням об'єкта.")]
+    public Collider groundCollider; 
 
 
     void Awake()
@@ -52,7 +54,10 @@ public class CollectablesManager : MonoBehaviour
                 enabled = false;
             }
         }
-        // <<< ВИДАЛЕНО: Перевірку groundCollider >>>
+        if (groundCollider == null) 
+        {
+            Debug.LogError("CollectablesManager: Ground Collider не призначений! Колізії з землею можуть не бути скинуті перед знищенням об'єкта.");
+        }
     }
 
     void Start()
@@ -104,10 +109,8 @@ public class CollectablesManager : MonoBehaviour
             if (collectable == highestRankCollectableTarget) 
             {
                 Debug.Log("CollectablesManager: Глобальну ціль досягнуто! Об'єкт з'їдений. Готуємо перемогу.");
-                // Запускаємо корутину для цільового об'єкта
                 StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay, true)); 
             } else {
-                // Для нецільових об'єктів - звичайне знищення
                 StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay, false)); 
             }
         }
@@ -117,17 +120,15 @@ public class CollectablesManager : MonoBehaviour
         }
     }
 
-    // Корутина для знищення об'єктів
     IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay, bool isWinTarget)
     {
         Debug.Log($"CollectablesManager: Корутина 'DestroyAfterDelay' для об'єкта '{objToDestroy.name}' розпочалася. Затримка: {delay} с. Ціль перемоги: {isWinTarget}");
 
-        // Якщо це цільовий об'єкт (перемога), вимикаємо рух гравця та робимо його некінематичним для падіння
         if (isWinTarget)
         {
-            if (playerMovement != null && playerMovement.enabled) // Перевірка, чи рух гравця ще увімкнений
+            if (playerMovement != null && playerMovement.enabled)
             {
-                playerMovement.enabled = false; // Вимкнення джойстика
+                playerMovement.enabled = false;
                 Debug.Log("CollectablesManager: Рух гравця (джойстик) вимкнено для фінального падіння цільового об'єкта.");
             }
 
@@ -136,19 +137,18 @@ public class CollectablesManager : MonoBehaviour
             {
                 collectedRb.isKinematic = false; 
                 collectedRb.useGravity = true;   
-                collectedRb.linearVelocity = Vector3.zero; 
+                collectedRb.linearVelocity = Vector3.zero; // <<< ВИПРАВЛЕНО: linearVelocity замінено на velocity >>>
                 collectedRb.angularVelocity = Vector3.zero; 
                 Debug.Log($"CollectablesManager: Забезпечено падіння об'єкта '{objToDestroy.name}' після перемоги.");
             }
             else
             {
                 Debug.LogWarning($"CollectablesManager: Зібраний об'єкт '{objToDestroy.name}' не має Rigidbody, не може падати. Перемога буде оброблена без падіння.");
-                EndGameWin(); // Якщо не може падати, фіналізуємо одразу
+                EndGameWin(); 
                 yield break; 
             }
         }
 
-        // Чекаємо затримку (Time.timeScale ще не дорівнює 0)
         yield return new WaitForSeconds(delay); 
         
         if (objToDestroy != null)
@@ -169,7 +169,6 @@ public class CollectablesManager : MonoBehaviour
             Destroy(objToDestroy);
             Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено після затримки {delay} с.");
             
-            // Фіналізуємо перемогу, якщо це цільовий об'єкт
             if (isWinTarget)
             {
                 EndGameWin(); 
@@ -187,7 +186,10 @@ public class CollectablesManager : MonoBehaviour
 
     void EndGameWin()
     {
-        // Зупиняємо гру повністю
+        if (gameProgressionManager != null)
+        {
+            gameProgressionManager.DisableObjectsOnGameOver(); 
+        }
         Time.timeScale = 0f;
         Debug.Log("CollectablesManager: Гра зупинена (Time.timeScale = 0).");
 

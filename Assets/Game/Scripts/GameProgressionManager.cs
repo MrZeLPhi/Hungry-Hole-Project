@@ -8,7 +8,10 @@ public class GameProgressionManager : MonoBehaviour
     public static event Action<int> OnLevelChanged; 
     public static event Action<int, int> OnLevelProgressUpdated; 
     public static event Action<float> OnPlayerSizeChanged; 
+    public static event Action<float> OnTimerUpdated; 
+    public static event Action OnGameLost; 
 
+    // Це клас, який буде містити дані для кожного рівня
     [System.Serializable] 
     public class LevelData
     {
@@ -24,7 +27,20 @@ public class GameProgressionManager : MonoBehaviour
 
     [Header("Level Progression Settings")]
     public int initialLevel = 1;
+    
+    [Tooltip("Дані для кожного рівня: очки та збільшення розміру. " +
+             "Індекс 0 = Дані для Рівня 1, Індекс 1 = Дані для Рівня 2, і т.д.")]
     public List<LevelData> levelProgressionData; 
+
+    [Header("Game Timer Settings")] 
+    [Tooltip("Тривалість гри в секундах.")]
+    public float gameDurationInSeconds = 180f; 
+    private float currentTimer; 
+
+    // <<< НОВЕ: Список об'єктів, які потрібно вимкнути при програші >>>
+    [Header("Game Over Settings")]
+    [Tooltip("Список об'єктів GameObject, які потрібно вимкнути при закінченні гри (програші).")]
+    public List<GameObject> objectsToDisableOnGameOver;
 
     // ----- Поточний стан гравця -----
     private int _currentLevel;
@@ -102,7 +118,24 @@ public class GameProgressionManager : MonoBehaviour
         CurrentLevelPoints = 0; 
         PlayerCurrentSize = playerHoleTransform.localScale.x; 
 
+        currentTimer = gameDurationInSeconds;
+        OnTimerUpdated?.Invoke(currentTimer); 
+
         Debug.Log("GameProgressionManager: Ініціалізація системи прогресу завершена.");
+    }
+
+    void Update() 
+    {
+        if (currentTimer > 0)
+        {
+            currentTimer -= Time.deltaTime;
+            OnTimerUpdated?.Invoke(currentTimer); 
+            if (currentTimer <= 0)
+            {
+                currentTimer = 0; 
+                EndGameLose(); 
+            }
+        }
     }
 
     public void AddPoints(int pointsToAdd)
@@ -140,7 +173,7 @@ public class GameProgressionManager : MonoBehaviour
         Debug.Log($"GameProgressionManager: *** РІВЕНЬ ПІДВИЩЕНО! Новий рівень: {CurrentLevel}, Нова квота: {GetPointsForCurrentLevelQuota()} ***");
     }
 
-    public int GetPointsForCurrentLevelQuota()
+    public int GetPointsForCurrentLevelQuota() 
     {
         int listIndex = CurrentLevel - 1; 
 
@@ -153,5 +186,32 @@ public class GameProgressionManager : MonoBehaviour
             return levelProgressionData[levelProgressionData.Count - 1].pointsRequiredForNextLevel;
         }
         return 999999; 
+    }
+
+    void EndGameLose()
+    {
+        Debug.Log("GameProgressionManager: Час вийшов! Ви програли.");
+        Time.timeScale = 0f; 
+
+        // <<< НОВЕ: Вимкнення вказаних об'єктів >>>
+        DisableObjectsOnGameOver();
+
+        OnGameLost?.Invoke(); 
+    }
+
+    // <<< НОВИЙ МЕТОД: Вимкнення об'єктів >>>
+    public void DisableObjectsOnGameOver()
+    {
+        if (objectsToDisableOnGameOver != null && objectsToDisableOnGameOver.Count > 0)
+        {
+            foreach (GameObject obj in objectsToDisableOnGameOver)
+            {
+                if (obj != null)
+                {
+                    obj.SetActive(false);
+                    Debug.Log($"GameProgressionManager: Об'єкт '{obj.name}' вимкнено при програші.");
+                }
+            }
+        }
     }
 }
