@@ -16,6 +16,10 @@ public class UIManager : MonoBehaviour
     [Tooltip("Посилання на GameProgressionManager на сцені. ПОВИННО БУТИ ПРИЗНАЧЕНО В ІНСПЕКТОРІ!")]
     public GameProgressionManager gameProgressionManager; 
 
+    [Header("Win Panel")]
+    [Tooltip("Панель, яка з'явиться при виграші. Перетягніть сюди ваш GameObject WinPanel.")]
+    public GameObject winPanel; // Панель виграшу
+
     void Awake()
     {
         if (gameProgressionManager == null)
@@ -26,6 +30,11 @@ public class UIManager : MonoBehaviour
                 Debug.LogError("UIManager: GameProgressionManager не знайдено на сцені! UI не буде оновлюватися.");
                 enabled = false;
             }
+        }
+        // Переконайтеся, що панель виграшу вимкнена на старті
+        if (winPanel != null)
+        {
+            winPanel.SetActive(false);
         }
     }
 
@@ -62,11 +71,11 @@ public class UIManager : MonoBehaviour
         else 
         {
             Debug.LogError("UIManager: GameProgressionManager не призначено в Start! Переконайтеся, що він призначений в Інспекторі.");
-            if (levelText != null) levelText.text = "ERR";
-            if (currentLevelDisplay != null) currentLevelDisplay.text = "ERR"; 
-            if (currentPointsDisplay != null) currentPointsDisplay.text = "ERR"; 
+            if (levelText != null) levelText.text = "Рівень: ERR";
+            if (currentLevelDisplay != null) currentLevelDisplay.text = "Поточний Рівень: ERR"; 
+            if (currentPointsDisplay != null) currentPointsDisplay.text = "Очки: ERR"; 
             if (scoreQuotaText != null) scoreQuotaText.text = "ERR/ERR"; 
-            if (sizeText != null) sizeText.text = "ERR"; 
+            if (sizeText != null) sizeText.text = "Діаметр: ERR"; 
             if (levelProgressBar != null) levelProgressBar.value = 0;
         }
         
@@ -77,12 +86,12 @@ public class UIManager : MonoBehaviour
     {
         if (levelText != null)
         {
-            levelText.text = newLevel.ToString();
+            levelText.text = "Рівень: " + newLevel.ToString();
             Debug.Log($"UIManager: Оновлено рівень: {newLevel}");
         }
         if (currentLevelDisplay != null) 
         {
-            currentLevelDisplay.text =  newLevel.ToString();
+            currentLevelDisplay.text = "Поточний Рівень: " + newLevel.ToString();
         }
     }
 
@@ -95,7 +104,7 @@ public class UIManager : MonoBehaviour
         
         if (currentPointsDisplay != null) 
         {
-            currentPointsDisplay.text =  currentPoints.ToString(); 
+            currentPointsDisplay.text = "Очки: " + currentPoints.ToString(); 
         }
 
         if (levelProgressBar != null)
@@ -111,8 +120,21 @@ public class UIManager : MonoBehaviour
         if (sizeText != null)
         {
             int displaySize = Mathf.RoundToInt(newSize); 
-            sizeText.text = displaySize.ToString();
+            sizeText.text = "Діаметр: " + displaySize.ToString();
             Debug.Log($"UIManager: Оновлено діаметр: {displaySize}");
+        }
+    }
+
+    public void ShowWinPanel()
+    {
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+            Debug.Log("UIManager: Панель виграшу активована.");
+        }
+        else
+        {
+            Debug.LogError("UIManager: Win Panel не призначено в Інспекторі! Неможливо показати.");
         }
     }
 }
