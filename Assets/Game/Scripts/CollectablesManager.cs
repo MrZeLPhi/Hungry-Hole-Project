@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections;
+using System.Collections; 
 
 public class CollectablesManager : MonoBehaviour
 {
@@ -20,14 +20,8 @@ public class CollectablesManager : MonoBehaviour
     [Tooltip("Час до остаточного знищення об'єкта після його поглинання (в секундах).")]
     public float destroyDelay = 4.0f; 
 
-    // <<< ВИДАЛЕНО: sizeComparisonTolerance, оскільки перевірка розміру більше не потрібна >>>
-    // [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору.")]
-    // public float sizeComparisonTolerance = 0.1f; 
-
-    // Очки та поточний розмір тепер керовані GameProgressionManager
-    // [Header("Score Settings")]
-    // private int _totalScore = 0; 
-    // public int totalScore { get { return _totalScore; } private set { ... } }
+    [Tooltip("Допустима похибка при порівнянні розмірів об'єкта з розміром отвору. (Менш критично для цього тригера).")]
+    public float sizeComparisonTolerance = 0.1f; 
 
     void Awake() 
     {
@@ -60,23 +54,26 @@ public class CollectablesManager : MonoBehaviour
 
         if (collectable != null && other.gameObject != null && gameProgressionManager != null) 
         {
-            // <<< ВИДАЛЕНО: Перевірка розміру об'єкта. Тепер будь-який Collectable, який доходить до DestroyZone, поглинається. >>>
-            // if (other.transform.localScale.x < gameProgressionManager.PlayerCurrentSize - sizeComparisonTolerance) 
+            // Перевірка розміру (залишена лише для логування, якщо об'єкт занадто великий для ВІЗУАЛЬНОГО проходження)
+            if (other.transform.localScale.x > gameProgressionManager.PlayerCurrentSize + sizeComparisonTolerance) 
+            {
+                Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' (розмір X: {other.transform.localScale.x}) досяг знищувача, але візуально завеликий для поточного розміру дірки ({gameProgressionManager.PlayerCurrentSize:F2}).");
+            }
             
             Debug.Log($"CollectablesManager: Об'єкт '{other.name}' ПОГЛИНУТО (фінальний етап).");
 
             gameProgressionManager.AddPoints(collectable.scoreValue); 
-
-            // Об'єкт залишається видимим, поки не закінчиться destroyDelay.
-            // Приховування відбувається в корутині DestroyAfterDelay, перед самим знищенням.
+            
+            // <<< ВИПРАВЛЕНО: НЕ ВИМИКАЄМО РЕНДЕРЕР ТА КОЛЛАЙДЕР ТУТ ЖЕ >>>
+            // Об'єкт має залишатися видимим під час падіння.
+            // Його приховування та знищення відбудуться в корутині DestroyAfterDelay.
+            // Collider objCollider = other.GetComponent<Collider>();
+            // if (objCollider != null) { objCollider.enabled = false; }
+            // MeshRenderer objRenderer = other.GetComponent<MeshRenderer>();
+            // if (objRenderer != null) { objRenderer.enabled = false; }
+            // -------------------------------------------------------------
             
             StartCoroutine(DestroyAfterDelay(other.gameObject, destroyDelay));
-            // <<< КІНЕЦЬ ВИДАЛЕННЯ: else-блоку від перевірки розміру теж немає >>>
-            // }
-            // else
-            // {
-            //     Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' завеликий для фінального поглинання (за розміром HoleDestroyer).");
-            // }
         }
         else
         {
@@ -92,6 +89,8 @@ public class CollectablesManager : MonoBehaviour
         
         if (objToDestroy != null)
         {
+            // <<< ВИПРАВЛЕНО: ПРИХОВУЄМО РЕНДЕРЕР ТА КОЛЛАЙДЕР ПРЯМО ПЕРЕД ЗНИЩЕННЯМ >>>
+            // Це забезпечить, що об'єкт буде видимим протягом DELAY, а потім зникне.
             Collider objCollider = objToDestroy.GetComponent<Collider>();
             if (objCollider != null) 
             {
@@ -104,6 +103,7 @@ public class CollectablesManager : MonoBehaviour
                 objRenderer.enabled = false; 
                 Debug.Log($"CollectablesManager: Вимкнено MeshRenderer для '{objToDestroy.name}' перед знищенням.");
             }
+            // -------------------------------------------------------------------------
             
             Destroy(objToDestroy);
             Debug.Log($"CollectablesManager: Об'єкт '{objToDestroy.name}' успішно знищено після затримки {delay} с.");

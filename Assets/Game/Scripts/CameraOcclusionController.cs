@@ -14,22 +14,22 @@ public class CameraOcclusionController : MonoBehaviour
     [Range(0f, 1f)]
     public float targetAlpha = 0.4f; 
     
+    [Tooltip("Матеріал, який використовуватиметься для прозорості об'єктів-перешкод.")]
+    public Material transparentOccluderMaterial; 
+
     [Header("References")]
     public GameProgressionManager gameProgressionManager; 
     public HoleHandler holeHandler; 
 
-    // Внутрішня структура для зберігання оригінального кольору матеріалу
+    // Внутрішня структура для зберігання оригінальних даних матеріалу
     private struct OriginalMaterialInfo
     {
-        public Color originalColor;       
-        public int originalRenderQueue; 
-        public string originalRenderType; 
+        public Material originalMaterialInstance; // Зберігаємо саме оригінальний інстанс матеріалу
     }
 
     // Словник для відстеження об'єктів, які зараз прозорі/змінені
     private Dictionary<Renderer, OriginalMaterialInfo> occludingRenderersInfo = new Dictionary<Renderer, OriginalMaterialInfo>();
 
-    // Змінна для відстеження об'єктів, які мають бути прозорими в поточному кадрі
     private List<Renderer> renderersToMakeTransparentThisFrame = new List<Renderer>();
 
     void Awake()
@@ -52,6 +52,12 @@ public class CameraOcclusionController : MonoBehaviour
             enabled = false;
             return;
         }
+        if (transparentOccluderMaterial == null)
+        {
+            Debug.LogError("CameraOcclusionController: Transparent Occluder Material не призначений! Прозорість перешкод не працюватиме.");
+            enabled = false;
+            return;
+        }
     }
     
     void OnDisable()
@@ -61,9 +67,10 @@ public class CameraOcclusionController : MonoBehaviour
             Renderer renderer = entry.Key;
             OriginalMaterialInfo originalInfo = entry.Value;
             
-            if (renderer != null && renderer.material != null)
+            if (renderer != null && originalInfo.originalMaterialInstance != null)
             {
-                SetMaterialOpaqueInstant(renderer.material, originalInfo); 
+                // Повертаємо оригінальний матеріал-інстанс
+                renderer.material = originalInfo.originalMaterialInstance; 
             }
         }
         occludingRenderersInfo.Clear();
@@ -73,7 +80,7 @@ public class CameraOcclusionController : MonoBehaviour
     {
         renderersToMakeTransparentThisFrame.Clear();
 
-        if (playerTarget == null || gameProgressionManager == null || holeHandler == null || !enabled) 
+        if (playerTarget == null || gameProgressionManager == null || holeHandler == null || !enabled || transparentOccluderMaterial == null) 
         {
             return;
         }
@@ -106,11 +113,13 @@ public class CameraOcclusionController : MonoBehaviour
             {
                 if (!occludingRenderersInfo.ContainsKey(renderer)) 
                 {
-                    Material originalMatInstance = renderer.material; 
+                    // Зберігаємо оригінальний матеріал об'єкта (його інстанс)
                     occludingRenderersInfo.Add(renderer, 
-                        new OriginalMaterialInfo { originalColor = originalMatInstance.color, originalRenderQueue = originalMatInstance.renderQueue, originalRenderType = originalMatInstance.GetTag("RenderType", false) });
+                        new OriginalMaterialInfo { originalMaterialInstance = renderer.material }); 
                 }
-                SetMaterialTransparentInstant(renderer.material, targetAlpha); 
+                // Призначаємо наш прозорий матеріал та встановлюємо альфа-канал
+                renderer.material = transparentOccluderMaterial; 
+                renderer.material.color = new Color(renderer.material.color.r, renderer.material.color.g, renderer.material.color.b, targetAlpha);
             }
         }
 
@@ -123,15 +132,17 @@ public class CameraOcclusionController : MonoBehaviour
                 continue;
             }
 
-            // <<< ВИПРАВЛЕНО: ВИДАЛЕНО УМОВУ isInHoleCollider >>>
+            // <<< ВИПРАВЛЕНО: ВИДАЛЕНО УМОВУ isInHoleCollider! >>>
             // Об'єкт стає непрозорим ТІЛЬКИ, якщо він більше НЕ блокує огляд.
             bool shouldBeOpaqueBecauseNotBlocking = !renderersToMakeTransparentThisFrame.Contains(renderer);
             // bool isInHoleCollider = (holeHandler != null && holeHandler.gameObject.GetComponent<Collider>() != null && renderer.bounds.Intersects(holeHandler.gameObject.GetComponent<Collider>().bounds));
             
-            if (shouldBeOpaqueBecauseNotBlocking /* || isInHoleCollider */) // isInHoleCollider видалено з умови
+            if (shouldBeOpaqueBecauseNotBlocking) // Умова тепер залежить тільки від Raycast
             {
-                SetMaterialOpaqueInstant(renderer.material, occludingRenderersInfo[renderer]);
-                Debug.Log($"CameraOcclusionController: Об'єкт '{renderer.name}' повертається до непрозорого (більше не блокує)."); // Змінено лог
+                renderer.material = occludingRenderersInfo[renderer].originalMaterialInstance; 
+                renderer.material.color = new Color(renderer.material.color.r, renderer.material.color.g, renderer.material.color.b, 1.0f);
+
+                Debug.Log($"CameraOcclusionController: Об'єкт '{renderer.name}' повертається до непрозорого (більше не блокує)."); 
                 renderersToMakeOpaque.Add(renderer); 
             }
         }
@@ -146,36 +157,7 @@ public class CameraOcclusionController : MonoBehaviour
         // Цей метод належить CameraMovement.cs. Тут його не має бути.
     }
 
-    void SetMaterialTransparentInstant(Material material, float alpha)
-    {
-        if (material == null) return;
-        Color color = material.color;
-        color.a = alpha;
-        material.color = color;
-
-        material.SetInt("_Mode", 2); 
-        material.SetOverrideTag("RenderType", "Fade");
-        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        material.SetInt("_ZWrite", 0); 
-        material.DisableKeyword("_ALPHATEST_ON");
-        material.EnableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-    }
-
-    void SetMaterialOpaqueInstant(Material material, OriginalMaterialInfo originalInfo)
-    {
-        if (material == null) return;
-        material.color = originalInfo.originalColor; 
-        material.SetInt("_Mode", 0); 
-        material.SetOverrideTag("RenderType", originalInfo.originalRenderType); 
-        material.renderQueue = originalInfo.originalRenderQueue; 
-        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-        material.SetInt("_ZWrite", 1); 
-        material.DisableKeyword("_ALPHABLEND_ON");
-        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        material.EnableKeyword("_ALPHATEST_ON"); 
-    }
+    // Ці методи SetMaterialTransparentInstant та SetMaterialOpaqueInstant були замінені в логіці LateUpdate
+    // і не потрібні як окремі функції, якщо ви їх більше не викликаєте.
+    // Якщо вони викликаються десь ще, їх потрібно буде відновити з попереднього коду.
 }

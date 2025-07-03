@@ -5117,7 +5117,8 @@ MonoBehaviour:
   normalObjectLayer:
     serializedVersion: 2
     m_Bits: 192
-  targetAlpha: 0.816
+  targetAlpha: 0.7
+  transparentOccluderMaterial: {fileID: 2100000, guid: 4735bad3424a57c49bc9386c33ad9b93, type: 2}
   gameProgressionManager: {fileID: 1569515949}
   holeHandler: {fileID: 1824896407}
 --- !u!4 &228214719
@@ -6224,6 +6225,7 @@ MonoBehaviour:
   playerHoleTransform: {fileID: 2029975855}
   gameProgressionManager: {fileID: 1569515949}
   destroyDelay: 4
+  sizeComparisonTolerance: 0.1
 --- !u!65 &300864152
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6738,7 +6740,7 @@ Transform:
   m_GameObject: {fileID: 340645463}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.1717522, z: -0, w: 0.9851402}
-  m_LocalPosition: {x: 125.48, y: 0.06804619, z: -18.37}
+  m_LocalPosition: {x: 131.16, y: 0.64, z: -21.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17890,7 +17892,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -19796,7 +19799,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 749b9069dc4742c5bfa5c74644049926, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2100000, guid: 749b9069dc4742c5bfa5c74644049926, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -21610,7 +21614,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -24273,7 +24278,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -31818,7 +31824,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -32295,8 +32302,6 @@ MonoBehaviour:
   initialBounceForce: 0.7
   periodicBounceForce: 0.7
   periodicBounceInterval: 0.4
-  targetAlphaInHole: 0.344
-  fadeDuration: 1.15
   gameProgressionManager: {fileID: 1569515949}
 --- !u!135 &1824896408
 SphereCollider:

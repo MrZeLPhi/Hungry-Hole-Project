@@ -220,7 +220,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -480,11 +481,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df6b5a475e2c9ea498b5892d17a70b6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1149174336}
-  smoothSpeed: 0.6
-  initialOffset: {x: 0, y: 0, z: 0}
-  baseOffsetMultiplier: 1
-  sizeToOffsetMultiplier: 1
+  playerTarget: {fileID: 0}
+  normalObjectLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  targetAlpha: 0.4
+  gameProgressionManager: {fileID: 0}
+  holeHandler: {fileID: 0}
 --- !u!4 &406260561 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7209024061696697993, guid: 78049b883c6549443a44bd045f2b8ce6, type: 3}
@@ -1002,7 +1005,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreValue: 7
-  sizeIncreaseAmount: 2.28
+  rank: 1
 --- !u!4 &830944443 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 165662977354894050, guid: 459bf6bc825ea9845822408053e0b7aa, type: 3}
@@ -1158,7 +1161,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreValue: 9
-  sizeIncreaseAmount: 1.27
+  rank: 1
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -3161,6 +3164,7 @@ MonoBehaviour:
   initialBounceForce: 0.7
   periodicBounceForce: 0.7
   periodicBounceInterval: 0.4
+  gameProgressionManager: {fileID: 0}
 --- !u!135 &881493632
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -3258,7 +3262,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -3719,8 +3724,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerHoleTransform: {fileID: 1149174336}
-  initialHoleSize: 1.5
-  growthMultiplier: 0.01
+  gameProgressionManager: {fileID: 0}
   destroyDelay: 2
   sizeComparisonTolerance: 0.2
 --- !u!114 &1149174340
@@ -3735,8 +3739,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98a198fb77e8e514fb4930759a7eeddd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scoreText: {fileID: 947976184}
+  levelText: {fileID: 0}
+  currentLevelDisplay: {fileID: 0}
+  currentPointsDisplay: {fileID: 0}
+  scoreQuotaText: {fileID: 0}
   sizeText: {fileID: 196981257}
+  levelProgressBar: {fileID: 0}
+  gameProgressionManager: {fileID: 0}
 --- !u!4 &1168961433 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4262598523984838447, guid: 6ce5d694780084341b1025650bdd432c, type: 3}
@@ -10301,7 +10310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreValue: 20
-  sizeIncreaseAmount: 0.43
+  rank: 1
 --- !u!4 &2024703746 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1716854773308474732, guid: 8ce6b6e7fcdc39243881ee68d05db72a, type: 3}
@@ -10593,7 +10602,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreValue: 2
-  sizeIncreaseAmount: 0.1
+  rank: 1
 --- !u!224 &2141632978 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}

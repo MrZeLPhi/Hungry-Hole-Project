@@ -5,22 +5,11 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     [Header("UI References")]
-    [Tooltip("Текстовий елемент для відображення поточного рівня гравця.")]
-    public TextMeshProUGUI levelText;       
-    
-    [Tooltip("Текстовий елемент для відображення поточного рівня гравця (дублюється, якщо потрібно).")]
-    public TextMeshProUGUI currentLevelDisplay; 
-    
-    [Tooltip("Текстовий елемент для відображення поточних очок гравця.")]
-    public TextMeshProUGUI currentPointsDisplay; 
-    
-    [Tooltip("Текстовий елемент для відображення поточних очок гравця у форматі 'поточні/квота'.")]
-    public TextMeshProUGUI scoreQuotaText;      
-    
-    [Tooltip("Текстовий елемент для відображення розміру/діаметра гравця (залишається, якщо використовується).")]
-    public TextMeshProUGUI sizeText;        
-    
-    [Tooltip("Слайдер для відображення прогресу заповнення рівня.")]
+    public TextMeshProUGUI levelText;           // "Рівень: X"
+    public TextMeshProUGUI currentLevelDisplay; // Для відображення поточного рівня гравця окремо
+    public TextMeshProUGUI currentPointsDisplay; // Для відображення поточних очок гравця окремо
+    public TextMeshProUGUI scoreQuotaText;      // "Y/Z" (поточні очки / квота)
+    public TextMeshProUGUI sizeText;            // Діаметр (якщо ви його ще використовуєте)
     public Slider levelProgressBar;         
 
     [Header("Game Progression Reference")]
@@ -73,11 +62,11 @@ public class UIManager : MonoBehaviour
         else 
         {
             Debug.LogError("UIManager: GameProgressionManager не призначено в Start! Переконайтеся, що він призначений в Інспекторі.");
-            if (levelText != null) levelText.text = "Рівень: ERR";
-            if (currentLevelDisplay != null) currentLevelDisplay.text = "Поточний Рівень: ERR"; 
-            if (currentPointsDisplay != null) currentPointsDisplay.text = "Очки: ERR"; 
+            if (levelText != null) levelText.text = "ERR";
+            if (currentLevelDisplay != null) currentLevelDisplay.text = "ERR"; 
+            if (currentPointsDisplay != null) currentPointsDisplay.text = "ERR"; 
             if (scoreQuotaText != null) scoreQuotaText.text = "ERR/ERR"; 
-            if (sizeText != null) sizeText.text = "Діаметр: ERR"; 
+            if (sizeText != null) sizeText.text = "ERR"; 
             if (levelProgressBar != null) levelProgressBar.value = 0;
         }
         
@@ -88,12 +77,12 @@ public class UIManager : MonoBehaviour
     {
         if (levelText != null)
         {
-            levelText.text = "Рівень: " + newLevel.ToString();
+            levelText.text = newLevel.ToString();
             Debug.Log($"UIManager: Оновлено рівень: {newLevel}");
         }
         if (currentLevelDisplay != null) 
         {
-            currentLevelDisplay.text = "Поточний Рівень: " + newLevel.ToString();
+            currentLevelDisplay.text =  newLevel.ToString();
         }
     }
 
@@ -106,7 +95,7 @@ public class UIManager : MonoBehaviour
         
         if (currentPointsDisplay != null) 
         {
-            currentPointsDisplay.text = "Очки: " + currentPoints.ToString(); 
+            currentPointsDisplay.text =  currentPoints.ToString(); 
         }
 
         if (levelProgressBar != null)
@@ -122,7 +111,7 @@ public class UIManager : MonoBehaviour
         if (sizeText != null)
         {
             int displaySize = Mathf.RoundToInt(newSize); 
-            sizeText.text = "Діаметр: " + displaySize.ToString();
+            sizeText.text = displaySize.ToString();
             Debug.Log($"UIManager: Оновлено діаметр: {displaySize}");
         }
     }
