@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1076888153524471403}
   - component: {fileID: 9161902569018543997}
   - component: {fileID: 5108997602953642124}
+  - component: {fileID: 8331891206947133764}
   m_Layer: 6
   m_Name: SM_Toy_08
   m_TagString: Untagged
@@ -136,3 +137,17 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.23807617, y: 0.22147901, z: 0.23569335}
   m_Center: {x: 0, y: 0.11178056, z: 0}
+--- !u!114 &8331891206947133764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1581076150795937726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d93e68e5a8c05f41bf04d779316935c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scoreValue: 1
+  rank: 1

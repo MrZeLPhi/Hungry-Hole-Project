@@ -11,15 +11,15 @@ GameObject:
   - component: {fileID: 3542139207211297327}
   - component: {fileID: 470607756066235786}
   - component: {fileID: 2405793062187946304}
-  - component: {fileID: 3541619043127364172}
   - component: {fileID: 3732286437286877194}
   - component: {fileID: 4027402909221439821}
-  m_Layer: 0
+  - component: {fileID: 6094071126237556712}
+  m_Layer: 6
   m_Name: SM_Playground_05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &3542139207211297327
 Transform:
@@ -89,27 +89,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3541619043127364172
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4207457694302367893}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 3.074206, y: 1.8695269, z: 0.66944337}
-  m_Center: {x: -0.00048846006, y: 0.93155134, z: 3.8477795e-17}
 --- !u!114 &3732286437286877194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,3 +130,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &6094071126237556712
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4207457694302367893}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.0416384, y: 1.8695269, z: 0.66944337}
+  m_Center: {x: -0.00000011920929, y: 0.93155366, z: 0.0000038146973}
