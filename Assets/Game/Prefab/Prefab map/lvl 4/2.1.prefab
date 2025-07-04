@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7573272740857357731}
   - component: {fileID: 8772304280142777718}
   - component: {fileID: 8892937122558272321}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: 2.1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d93e68e5a8c05f41bf04d779316935c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scoreValue: 4
+  scoreValue: 5
   rank: 4
 --- !u!65 &8772304280142777718
 BoxCollider:
