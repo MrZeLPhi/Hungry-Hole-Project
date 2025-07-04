@@ -14,9 +14,8 @@ public class GameProgressionManager : MonoBehaviour
     public static event Action<int> OnTotalScoreChanged; // Подія для загального рахунку
     public static event Action<float> OnGameFinishedWithTime; // Подія для часу завершення гри
 
-    // <<< ВИПРАВЛЕНО: КОРЕКТНЕ РОЗМІЩЕННЯ ТА ВИЗНАЧЕННЯ КЛАСУ LEVELDATA >>>
     // Це клас, який буде містити дані для кожного рівня
-    [System.Serializable] // Дозволяє Unity серіалізувати цей клас і відображати його в Інспекторі
+    [System.Serializable] 
     public class LevelData
     {
         [Tooltip("Очки, необхідні для переходу з цього рівня на наступний.")]
@@ -25,17 +24,22 @@ public class GameProgressionManager : MonoBehaviour
         [Tooltip("На скільки збільшиться розмір гравця при досягненні цього рівня.")]
         public float sizeIncreaseOnLevelUp;
     }
-    // ----------------------------------------------------------------------
 
     [Header("Player Reference")]
-    public Transform playerHoleTransform;
+    public Transform playerHoleTransform; // Основний об'єкт гравця (для XZ масштабування)
+    
+    [Tooltip("Дочірній об'єкт (візуальна модель дірки), масштабування Y якого буде змінюватися окремо.")]
+    public Transform holeVisualChildTransform; 
 
     [Header("Level Progression Settings")]
     public int initialLevel = 1;
     
     [Tooltip("Дані для кожного рівня: очки та збільшення розміру. " +
              "Індекс 0 = Дані для Рівня 1, Індекс 1 = Дані для Рівня 2, і т.д.")]
-    public List<LevelData> levelProgressionData; // Налаштовуйте цей список в Інспекторі!
+    public List<LevelData> levelProgressionData; 
+
+    // <<< ВИДАЛЕНО: public float holeDepthIncreasePerLevel; >>>
+    // -----------------------------------------------------------
 
     [Header("Game Timer Settings")] 
     [Tooltip("Тривалість гри в секундах.")]
@@ -127,6 +131,10 @@ public class GameProgressionManager : MonoBehaviour
             enabled = false;
             return;
         }
+        if (holeVisualChildTransform == null)
+        {
+            Debug.LogWarning("GameProgressionManager: Hole Visual Child Transform не призначений! Глибина дірки не буде збільшуватися.");
+        }
 
         if (levelProgressionData == null || levelProgressionData.Count == 0)
         {
@@ -192,7 +200,20 @@ public class GameProgressionManager : MonoBehaviour
 
         if (currentLevelIndex >= 0 && currentLevelIndex < levelProgressionData.Count)
         {
-            PlayerCurrentSize += levelProgressionData[currentLevelIndex].sizeIncreaseOnLevelUp;
+            float sizeIncrease = levelProgressionData[currentLevelIndex].sizeIncreaseOnLevelUp; // Отримуємо збільшення розміру
+            PlayerCurrentSize += sizeIncrease; // Збільшуємо XZ
+            
+            // <<< НОВЕ: Збільшуємо масштаб Y дочірнього об'єкта симетрично >>>
+            if (holeVisualChildTransform != null)
+            {
+                holeVisualChildTransform.localScale = new Vector3(
+                    holeVisualChildTransform.localScale.x,
+                    holeVisualChildTransform.localScale.y + sizeIncrease, // ВИКОРИСТОВУЄМО ТЕ Ж ЗНАЧЕННЯ
+                    holeVisualChildTransform.localScale.z
+                );
+                Debug.Log($"GameProgressionManager: Глибина дірки збільшена симетрично до: {holeVisualChildTransform.localScale.y:F2}.");
+            }
+            // ------------------------------------------------------------------
         }
         else
         {
