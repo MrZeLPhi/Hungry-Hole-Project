@@ -20,6 +20,11 @@ public class CollectablesManager : MonoBehaviour
     // Зберігаємо посилання на НАЙВИЩИЙ за рангом об'єкт
     private Collectable highestRankCollectableTarget; 
 
+    // <<< НОВЕ ПОЛЕ: Посилання на TargetIndicator >>>
+    [Header("Target Indicator Reference")]
+    public TargetIndicator targetIndicator; 
+    // -----------------------------------------------
+
     [Header("Physics Settings")] 
     [Tooltip("Коллайдер землі, з яким буде скасовано ігнорування колізій перед знищенням об'єкта.")]
     public Collider groundCollider; 
@@ -54,6 +59,13 @@ public class CollectablesManager : MonoBehaviour
                 enabled = false;
             }
         }
+        // <<< НОВЕ: Перевірка посилання на TargetIndicator >>>
+        if (targetIndicator == null)
+        {
+            targetIndicator = FindObjectOfType<TargetIndicator>();
+            if (targetIndicator == null) Debug.LogError("CollectablesManager: TargetIndicator не знайдено на сцені!");
+        }
+        // ----------------------------------------------------
         if (groundCollider == null) 
         {
             Debug.LogError("CollectablesManager: Ground Collider не призначений! Колізії з землею можуть не бути скинуті перед знищенням об'єкта.");
@@ -76,6 +88,21 @@ public class CollectablesManager : MonoBehaviour
             if (highestRankCollectableTarget != null)
             {
                 Debug.Log($"CollectablesManager: Глобальна ціль: з'їсти об'єкт '{highestRankCollectableTarget.name}' з НАЙВИЩИМ рангом {highestRankCollectableTarget.rank}");
+                
+                // <<< ВИПРАВЛЕНО: Викликаємо SetTarget на TargetIndicator >>>
+                if (targetIndicator != null)
+                {
+                    targetIndicator.SetTarget(highestRankCollectableTarget);
+                }
+                // ------------------------------------------------------------------
+
+                // Заборона обертання для Rigidbody цільового об'єкта
+                Rigidbody targetRb = highestRankCollectableTarget.GetComponent<Rigidbody>();
+                if (targetRb != null)
+                {
+                    targetRb.freezeRotation = true; 
+                    Debug.Log($"CollectablesManager: Обертання об'єкта '{highestRankCollectableTarget.name}' заморожено.");
+                }
             }
             else
             {
@@ -137,7 +164,7 @@ public class CollectablesManager : MonoBehaviour
             {
                 collectedRb.isKinematic = false; 
                 collectedRb.useGravity = true;   
-                collectedRb.linearVelocity = Vector3.zero; // <<< ВИПРАВЛЕНО: linearVelocity замінено на velocity >>>
+                collectedRb.linearVelocity = Vector3.zero; 
                 collectedRb.angularVelocity = Vector3.zero; 
                 Debug.Log($"CollectablesManager: Забезпечено падіння об'єкта '{objToDestroy.name}' після перемоги.");
             }
