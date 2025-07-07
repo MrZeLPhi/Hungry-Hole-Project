@@ -7726,7 +7726,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 2029975855}
   smoothSpeed: 0.125
-  initialOffset: {x: 0, y: 5, z: -5}
+  initialOffset: {x: 0, y: 10, z: -10}
   baseOffsetMultiplier: 1
   sizeToOffsetMultiplier: 1
   gameProgressionManager: {fileID: 1569515949}
@@ -40019,7 +40019,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerHoleTransform: {fileID: 2029975855}
   holeVisualChildTransform: {fileID: 1945981669}
-  initialLevel: 6
+  initialLevel: 5
   levelProgressionData:
   - pointsRequiredForNextLevel: 5
     sizeIncreaseOnLevelUp: 0.2
@@ -40029,16 +40029,16 @@ MonoBehaviour:
     sizeIncreaseOnLevelUp: 1.5
   - pointsRequiredForNextLevel: 50
     sizeIncreaseOnLevelUp: 2
-  - pointsRequiredForNextLevel: 100
-    sizeIncreaseOnLevelUp: 2.5
+  - pointsRequiredForNextLevel: 5
+    sizeIncreaseOnLevelUp: 3.54
   - pointsRequiredForNextLevel: 7
     sizeIncreaseOnLevelUp: 3.1
   - pointsRequiredForNextLevel: 20
-    sizeIncreaseOnLevelUp: 3.8
+    sizeIncreaseOnLevelUp: 5.85
+  - pointsRequiredForNextLevel: 288
+    sizeIncreaseOnLevelUp: 7.15
   - pointsRequiredForNextLevel: 300
-    sizeIncreaseOnLevelUp: 5
-  - pointsRequiredForNextLevel: 300
-    sizeIncreaseOnLevelUp: 6
+    sizeIncreaseOnLevelUp: 9.01
   - pointsRequiredForNextLevel: 300
     sizeIncreaseOnLevelUp: 5
   gameDurationInSeconds: 330
