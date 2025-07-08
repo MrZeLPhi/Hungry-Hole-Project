@@ -1,6 +1,7 @@
 using UnityEngine;
 using System; // Для System.Action
-using System.Collections.Generic; // Для List
+using System.Collections.Generic;
+using DG.Tweening; // Для List
 using UnityEngine.SceneManagement; // Для SceneManager
 
 public class GameProgressionManager : MonoBehaviour
@@ -23,6 +24,8 @@ public class GameProgressionManager : MonoBehaviour
 
         [Tooltip("На скільки збільшиться розмір гравця при досягненні цього рівня.")]
         public float sizeIncreaseOnLevelUp;
+
+        public Ease easeType;
     }
 
     [Header("Player Reference")]
@@ -88,6 +91,11 @@ public class GameProgressionManager : MonoBehaviour
     }
 
     private float _playerCurrentSize;
+    
+    // new code
+    public float scaleDuration;
+    public Ease easeType;
+        
     public float PlayerCurrentSize
     {
         get { return _playerCurrentSize; }
@@ -96,7 +104,16 @@ public class GameProgressionManager : MonoBehaviour
             if (_playerCurrentSize != value)
             {
                 _playerCurrentSize = value;
-                playerHoleTransform.localScale = new Vector3(_playerCurrentSize, playerHoleTransform.localScale.y, _playerCurrentSize);
+                // old code
+                // playerHoleTransform.localScale = new Vector3(_playerCurrentSize, playerHoleTransform.localScale.y, _playerCurrentSize);
+                
+                
+                // new code start
+                Vector3 targetScale = new Vector3(_playerCurrentSize, playerHoleTransform.localScale.y, _playerCurrentSize);
+                playerHoleTransform.DOScale(targetScale, scaleDuration).SetEase(levelProgressionData[CurrentLevel].easeType);
+                // new code end
+                
+               // playerHoleTransform.DOScale(new Vector3(_playerCurrentSize, playerHoleTransform.localScale.y, _playerCurrentSize), scaleDuration).SetEase(easeType);
                 OnPlayerSizeChanged?.Invoke(_playerCurrentSize);
                 Debug.Log($"GameProgressionManager: Розмір гравця оновлено до: {_playerCurrentSize:F2}.");
             }
