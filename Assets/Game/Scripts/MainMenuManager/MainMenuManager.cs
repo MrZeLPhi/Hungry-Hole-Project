@@ -3,10 +3,13 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
-using UnityEngine.EventSystems; // <<< НОВЕ: Для обробки подій UI (перетягування)
+using UnityEngine.EventSystems; // Важливо, що він є
 
-// Додаємо інтерфейси для обробки перетягування
-public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler 
+// Тепер MainMenuManager не повинен реалізовувати ці інтерфейси напряму,
+// якщо він не знаходиться на LevelsContainer і ти використовуєш EventTrigger.
+// Якщо ти його переносиш на LevelsContainer, то залишай ці інтерфейси!
+// public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler 
+public class MainMenuManager : MonoBehaviour
 {
     [Header("Main Menu Buttons")]
     public Button settingsButton;
@@ -24,22 +27,19 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     public TextMeshProUGUI levelNameText; 
     public Button levelPlayButton; 
     
-    // <<< ЗМІНА: Кнопки стрілок видалені, додано контейнер для свайпу >>>
     [Tooltip("RectTransform, який є батьківським для всіх карток рівнів.")]
     public RectTransform levelsContainer; // Контейнер, який буде переміщатися
     [Tooltip("Ширина однієї картки рівня. Важливо, щоб вона була однаковою для всіх карток!")]
-    public float levelCardWidth = 1000f; // Приклад: встановіть ширину вашої картки
+    public float levelCardWidth = 700f; // <--- ПЕРЕВІР, ЩО ЦЕ ЗНАЧЕННЯ ПРАВИЛЬНЕ
     [Tooltip("Швидкість прив'язки картки після свайпу.")]
     public float snapSpeed = 5f;
     [Tooltip("Мінімальна відстань перетягування для спрацьовування свайпу.")]
-    public float swipeThreshold = 50f; // Скільки пікселів потрібно перетягнути для зміни рівня
-    // ----------------------------------------------------------------------
+    public float swipeThreshold = 50f; 
 
     [Tooltip("Список ІНДЕКСІВ сцен (карток) у Build Settings в порядку проходження кампанії.")]
     public List<int> levelSceneBuildIndices; 
     private int currentLevelIndex = 0; 
 
-    // Змінні для логіки перетягування
     private Vector2 dragStartMousePosition;
     private Vector2 dragCurrentContainerPosition;
     private Vector2 targetContainerPosition;
@@ -53,18 +53,14 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (shopPanel != null) shopPanel.SetActive(false);
         if (campaignPanel != null) campaignPanel.SetActive(false); 
 
-        // Призначення обробників для кнопок основного меню
         if (settingsButton != null) settingsButton.onClick.AddListener(ShowSettingsPanel);
         if (shopButton != null) shopButton.onClick.AddListener(ShowShopPanel);
 
-        // Призначення обробників для кнопок закриття панелей
         if (settingsCloseButton != null) settingsCloseButton.onClick.AddListener(HideAllPanels);
         if (shopCloseButton != null) shopCloseButton.onClick.AddListener(HideAllPanels);
 
-        // Призначення обробника для кнопки Play
         if (levelPlayButton != null) levelPlayButton.onClick.AddListener(PlaySelectedLevel);
 
-        // Ініціалізуємо цільову позицію контейнера
         if (levelsContainer != null)
         {
             targetContainerPosition = levelsContainer.anchoredPosition;
@@ -78,7 +74,6 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     void Update()
     {
-        // Плавно переміщуємо контейнер до цільової позиції, якщо не відбувається перетягування
         if (!isDragging && levelsContainer != null)
         {
             levelsContainer.anchoredPosition = Vector2.Lerp(levelsContainer.anchoredPosition, targetContainerPosition, Time.deltaTime * snapSpeed);
@@ -106,11 +101,10 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (campaignPanel != null) campaignPanel.SetActive(true);
         Debug.Log("MainMenuManager: Показано панель кампанії.");
         UpdateLevelDisplay(); 
-        // При стартовій ініціалізації встановлюємо контейнер на поточний рівень
         if (levelsContainer != null && levelSceneBuildIndices != null && levelSceneBuildIndices.Count > 0)
         {
             targetContainerPosition = new Vector2(-currentLevelIndex * levelCardWidth, levelsContainer.anchoredPosition.y);
-            levelsContainer.anchoredPosition = targetContainerPosition; // Одразу перемістити
+            levelsContainer.anchoredPosition = targetContainerPosition; 
         }
     }
 
@@ -168,15 +162,34 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
     }
 
-    // --- Реалізація інтерфейсів перетягування ---
-    public void OnBeginDrag(PointerEventData eventData)
+    // --- ОБГОРТКОВІ МЕТОДИ ДЛЯ EventTrigger ---
+    // Ці методи викликаються з EventTrigger і передають дані далі
+    public void HandleBeginDrag(BaseEventData eventData)
+    {
+        OnBeginDrag((PointerEventData)eventData);
+    }
+
+    public void HandleDrag(BaseEventData eventData)
+    {
+        OnDrag((PointerEventData)eventData);
+    }
+
+    public void HandleEndDrag(BaseEventData eventData)
+    {
+        OnEndDrag((PointerEventData)eventData);
+    }
+
+    // --- Оригінальні методи обробки перетягування (тепер private або protected) ---
+    // Їх сигнатура залишається такою, як була для інтерфейсів.
+    // Змінюємо їх доступність на private або protected, оскільки вони не викликаються напряму з EventTrigger.
+    private void OnBeginDrag(PointerEventData eventData)
     {
         isDragging = true;
         dragStartMousePosition = eventData.position;
-        dragCurrentContainerPosition = levelsContainer.anchoredPosition; // Зберігаємо поточну позицію контейнера
+        dragCurrentContainerPosition = levelsContainer.anchoredPosition; 
     }
 
-    public void OnDrag(PointerEventData eventData)
+    private void OnDrag(PointerEventData eventData)
     {
         if (levelsContainer == null) return;
 
@@ -187,35 +200,32 @@ public class MainMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         float minX = -(levelSceneBuildIndices.Count - 1) * levelCardWidth;
         float maxX = 0f; // Початкова позиція першої картки
 
-        newPos.x = Mathf.Clamp(newPos.x, minX, maxX);
+        newPos.x = Mathf.Clamp(newPos.x, minX, maxX); // <-- Ось тут відбувається обмеження!
 
         levelsContainer.anchoredPosition = newPos;
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    private void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
         float dragDistance = eventData.position.x - dragStartMousePosition.x;
 
-        // Визначаємо, чи потрібно змінити рівень
         if (Mathf.Abs(dragDistance) > swipeThreshold)
         {
-            if (dragDistance < 0) // Свайп вліво (переходимо до наступного рівня)
+            if (dragDistance < 0) 
             {
                 currentLevelIndex++;
             }
-            else // Свайп вправо (переходимо до попереднього рівня)
+            else 
             {
                 currentLevelIndex--;
             }
         }
 
-        // Обмежуємо індекс рівня
         currentLevelIndex = Mathf.Clamp(currentLevelIndex, 0, levelSceneBuildIndices.Count - 1);
 
-        // Встановлюємо цільову позицію для прив'язки
         targetContainerPosition = new Vector2(-currentLevelIndex * levelCardWidth, levelsContainer.anchoredPosition.y);
         
-        UpdateLevelDisplay(); // Оновлюємо текст назви рівня
+        UpdateLevelDisplay(); 
     }
 }
