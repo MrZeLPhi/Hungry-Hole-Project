@@ -6294,11 +6294,16 @@ MonoBehaviour:
   levelNameText: {fileID: 603877940}
   levelPlayButton: {fileID: 879773754}
   levelsContainer: {fileID: 1023136299}
-  levelsLayoutGroup: {fileID: 0}
+  levelsLayoutGroup: {fileID: 1023136301}
   snapSpeed: 5
   swipeThreshold: 50
   levelSceneBuildIndices: 010000000200000003000000040000000500000006000000
-  settingsManager: {fileID: 1740656362}
+  masterSoundToggleRef: {fileID: 1231830637}
+  sfxSliderRef: {fileID: 839003253}
+  menuSoundSliderRef: {fileID: 1622111404}
+  musicSliderRef: {fileID: 1908869887}
+  vibrationToggleRef: {fileID: 1385611608}
+  fpsDropdownRef: {fileID: 365952510}
 --- !u!4 &1737692392
 Transform:
   m_ObjectHideFlags: 0
@@ -6309,61 +6314,6 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1740656361
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1740656364}
-  - component: {fileID: 1740656362}
-  m_Layer: 0
-  m_Name: SettingsManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1740656362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1740656361}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09639d67a621577478d3b3f6f1a1885a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  masterSoundToggle: {fileID: 1231830637}
-  sfxSlider: {fileID: 839003253}
-  menuSoundSlider: {fileID: 1622111404}
-  musicSlider: {fileID: 1908869887}
-  masterMixer: {fileID: 24100000, guid: 150b7ce92b0667245ae5a68c91fc37ec, type: 2}
-  masterVolumeParam: MasterVolume
-  sfxVolumeParam: SFXVolume
-  menuVolumeParam: MenuVolume
-  musicVolumeParam: MusicVolume
-  vibrationToggle: {fileID: 1385611608}
-  fpsDropdown: {fileID: 365952510}
---- !u!4 &1740656364
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1740656361}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 855.8201, y: 1855.8235, z: 16.032715}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8080,4 +8030,3 @@ SceneRoots:
   - {fileID: 215952360}
   - {fileID: 1282457948}
   - {fileID: 1737692392}
-  - {fileID: 1740656364}

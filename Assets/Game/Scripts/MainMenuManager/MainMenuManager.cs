@@ -31,9 +31,7 @@ public class MainMenuManager : MonoBehaviour
     [Tooltip("Horizontal Layout Group на LevelsContainer для отримання Spacing.")]
     public HorizontalLayoutGroup levelsLayoutGroup; 
 
-    [Tooltip("Швидкість прив'язки картки після свайпу.")]
     public float snapSpeed = 5f;
-    [Tooltip("Мінімальна відстань перетягування для спрацьовування свайпу.")]
     public float swipeThreshold = 50f; 
 
     [Tooltip("Список ІНДЕКСІВ сцен (карток) у Build Settings в порядку проходження кампанії.")]
@@ -50,36 +48,48 @@ public class MainMenuManager : MonoBehaviour
     private float levelCardBaseWidth = 700f; // Дефолтне значення, буде оновлено в Awake
     private float effectiveCardWidth; // Ширина картки + spacing
 
-    [Header("Managers")]
-    [Tooltip("Посилання на менеджер налаштувань. Призначте GameObject 'SettingsManager' сюди в Inspector.")]
-    public SettingsManager settingsManager; // Посилання на SettingsManager (повинен бути призначений в Inspector)
+    // ЗМІНА ТУТ: Видаляємо публічне посилання на SettingsManager.
+    // public SettingsManager settingsManager; // <-- ВИДАЛЕНО!
+
+    // Private змінна для зберігання посилання на екземпляр SettingsManager
+    private SettingsManager _settingsManagerInstance; 
+
+    // НОВІ ПОСИЛАННЯ: UI-елементи з SettingsPanel, які MainMenuManager передасть SettingsManager
+    [Header("Settings Panel UI References")]
+    public Toggle masterSoundToggleRef;
+    public Slider sfxSliderRef;
+    public Slider menuSoundSliderRef;
+    public Slider musicSliderRef;
+    public Toggle vibrationToggleRef;
+    public TMP_Dropdown fpsDropdownRef;
+
 
     void Awake()
     {
         Time.timeScale = 1.0f;
 
-        // Початковий стан панелей:
-        // SettingsPanel та ShopPanel - неактивними в Hierarchy на старті
-        // CampaignPanel має бути активною за замовчуванням в Hierarchy
+        // ЗМІНА ТУТ: Знаходимо екземпляр SettingsManager через його Singleton Instance
+        _settingsManagerInstance = SettingsManager.Instance;
+        if (_settingsManagerInstance == null)
+        {
+            Debug.LogError("MainMenuManager: SettingsManager.Instance не знайдено! Переконайтесь, що SettingsManager знаходиться на сцені 'Bootstrap' та має скрипт Singleton.");
+        }
+
+
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (shopPanel != null) shopPanel.SetActive(false);
-        if (campaignPanel != null) campaignPanel.SetActive(true); // Переконайтесь, що ця панель активна на старті
+        if (campaignPanel != null) campaignPanel.SetActive(true); 
 
-        // Призначення обробників для кнопок основного меню
         if (settingsButton != null) settingsButton.onClick.AddListener(ShowSettingsPanel);
         if (shopButton != null) shopButton.onClick.AddListener(ShowShopPanel);
 
-        // Призначення обробників для кнопок закриття панелей (тепер закривають ТІЛЬКИ свою панель)
         if (settingsCloseButton != null) settingsCloseButton.onClick.AddListener(HideSettingsPanel);
         if (shopCloseButton != null) shopCloseButton.onClick.AddListener(HideShopPanel);
 
-        // Призначення обробника для кнопки Play
         if (levelPlayButton != null) levelPlayButton.onClick.AddListener(PlaySelectedLevel);
 
-        // Ініціалізація ширини картки та spacing для розрахунків скролу
         if (levelsContainer != null && levelsContainer.childCount > 0)
         {
-            // Беремо ширину першої картки для розрахунків
             levelCardBaseWidth = levelsContainer.GetChild(0).GetComponent<RectTransform>().rect.width;
         }
 
@@ -93,7 +103,6 @@ public class MainMenuManager : MonoBehaviour
             Debug.LogWarning("LevelsLayoutGroup не призначено в Inspector! Розрахунки скролу можуть бути неточними.");
         }
 
-        // Ініціалізуємо цільову позицію контейнера
         if (levelsContainer != null)
         {
             targetContainerPosition = levelsContainer.anchoredPosition;
@@ -102,19 +111,26 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        // Оновлюємо відображення поточної картки кампанії при запуску
+        // Додаткова перевірка в Start, якщо Awake спрацював раніше
+        if (_settingsManagerInstance == null)
+        {
+             _settingsManagerInstance = SettingsManager.Instance;
+             if (_settingsManagerInstance == null)
+             {
+                 Debug.LogError("MainMenuManager: SettingsManager.Instance все ще не знайдено в Start. Це серйозна проблема.");
+             }
+        }
+
         UpdateLevelDisplay(); 
-        // Встановлюємо контейнер на поточний рівень відразу
         if (levelsContainer != null && levelSceneBuildIndices != null && levelSceneBuildIndices.Count > 0)
         {
             targetContainerPosition = new Vector2(-currentLevelIndex * effectiveCardWidth, levelsContainer.anchoredPosition.y);
-            levelsContainer.anchoredPosition = targetContainerPosition; // Одразу перемістити
+            levelsContainer.anchoredPosition = targetContainerPosition; 
         }
     }
 
     void Update()
     {
-        // Плавно переміщуємо контейнер до цільової позиції, якщо не відбувається перетягування
         if (!isDragging && levelsContainer != null)
         {
             levelsContainer.anchoredPosition = Vector2.Lerp(levelsContainer.anchoredPosition, targetContainerPosition, Time.deltaTime * snapSpeed);
@@ -124,22 +140,22 @@ public class MainMenuManager : MonoBehaviour
     // --- Методи для UI панелей ---
     public void ShowSettingsPanel()
     {
-        // Ховаємо інші додаткові панелі, щоб уникнути їх накладання
         if (shopPanel != null) shopPanel.SetActive(false); 
         
-        // Активуємо панель налаштувань
         if (settingsPanel != null) settingsPanel.SetActive(true);
 
-        // Цей виклик гарантує, що UI налаштувань відображає актуальні значення
-        // з SettingsManager, незалежно від того, як часто відкривається панель.
-        if (settingsManager != null)
+        // Тепер використовуємо _settingsManagerInstance, який знаходимо програмно
+        if (_settingsManagerInstance != null)
         {
-            settingsManager.LoadSettings(); 
-            Debug.Log("Settings UI updated with latest values."); 
+            _settingsManagerInstance.LoadSettingsToUI(
+                masterSoundToggleRef, sfxSliderRef, menuSoundSliderRef, musicSliderRef,
+                vibrationToggleRef, fpsDropdownRef
+            );
+            Debug.Log("MainMenuManager: Settings UI updated with latest values."); 
         }
         else
         {
-            Debug.LogError("MainMenuManager: settingsManager посилання не призначено в Inspector! Неможливо завантажити налаштування UI.");
+            Debug.LogError("MainMenuManager: _settingsManagerInstance не знайдено. Неможливо завантажити налаштування UI.");
         }
         Debug.Log("MainMenuManager: Показано панель налаштувань.");
     }
@@ -152,7 +168,6 @@ public class MainMenuManager : MonoBehaviour
 
     public void ShowShopPanel()
     {
-        // Ховаємо інші додаткові панелі, щоб уникнути їх накладання
         if (settingsPanel != null) settingsPanel.SetActive(false); 
         if (shopPanel != null) shopPanel.SetActive(true);
         Debug.Log("MainMenuManager: Показано панель магазину.");
@@ -164,13 +179,10 @@ public class MainMenuManager : MonoBehaviour
         Debug.Log("MainMenuManager: Приховано панель магазину.");
     }
 
-    // Метод HideAllPanels() змінено, щоб він не ховав CampaignPanel, 
-    // оскільки вона має бути постійним фоном.
     public void HideAllPanels()
     {
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (shopPanel != null) shopPanel.SetActive(false);
-        // campaignPanel не ховаємо, вона є основою меню
         Debug.Log("MainMenuManager: Приховано всі додаткові панелі.");
     }
 
@@ -203,7 +215,7 @@ public class MainMenuManager : MonoBehaviour
 
         levelNameText.text = $"Рівень {currentLevelIndex + 1}: {sceneName}"; 
         
-        bool isLevelPlayable = true; // Тут може бути логіка розблокування рівня
+        bool isLevelPlayable = true; 
         
         if (levelPlayButton != null) levelPlayButton.interactable = isLevelPlayable;
     }
@@ -221,7 +233,6 @@ public class MainMenuManager : MonoBehaviour
     }
 
     // --- ОБГОРТКОВІ МЕТОДИ ДЛЯ EventTrigger ---
-    // Ці методи викликаються з EventTrigger і передають дані далі
     public void HandleBeginDrag(BaseEventData eventData)
     {
         OnBeginDrag((PointerEventData)eventData);
@@ -251,7 +262,6 @@ public class MainMenuManager : MonoBehaviour
         float deltaX = eventData.position.x - dragStartMousePosition.x;
         Vector2 newPos = dragCurrentContainerPosition + new Vector2(deltaX, 0);
 
-        // Розрахунок меж скролу з урахуванням effectiveCardWidth
         float currentMaxX = 0f; 
         float currentMinX = -(levelSceneBuildIndices.Count - 1) * effectiveCardWidth;
         
