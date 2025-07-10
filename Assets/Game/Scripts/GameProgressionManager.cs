@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement; // Для SceneManager
 
 public class GameProgressionManager : MonoBehaviour
 {
+    
     // ----- EVENTS -----
     public static event Action<int> OnLevelChanged; 
     public static event Action<int, int> OnLevelProgressUpdated; // current points, quota
@@ -134,6 +135,11 @@ public class GameProgressionManager : MonoBehaviour
             }
         }
     }
+    
+    // ------------------------
+    [Header("Player SFX")]
+    [Tooltip("Асет даних звуку вибуху. Перетягніть сюди SFX_Increase з вікна Project.")]
+    public SFXData IncreaseSFXData; // Публічне посилання на SFXData асет
 
     void Awake()
     {
@@ -217,6 +223,7 @@ public class GameProgressionManager : MonoBehaviour
 
         if (currentLevelIndex >= 0 && currentLevelIndex < levelProgressionData.Count)
         {
+            TriggerIncrease();
             float sizeIncrease = levelProgressionData[currentLevelIndex].sizeIncreaseOnLevelUp; // Отримуємо збільшення розміру
             PlayerCurrentSize += sizeIncrease; // Збільшуємо XZ
             
@@ -241,6 +248,27 @@ public class GameProgressionManager : MonoBehaviour
         CurrentLevelPoints = 0; 
 
         Debug.Log($"GameProgressionManager: *** РІВЕНЬ ПІДВИЩЕНО! Новий рівень: {CurrentLevel}, Нова квота: {GetPointsForCurrentLevelQuota()} ***");
+    }
+
+    void TriggerIncrease()
+    {
+        if (SoundManager.Instance == null)
+        {
+            Debug.LogError("SoundManager.Instance не знайдено! Неможливо відтворити вибух.");
+            return;
+        }
+
+        // Перевіряємо, чи призначено SFXData для вибуху
+        if (IncreaseSFXData == null)
+        {
+            Debug.LogWarning("SFXData для вибуху не призначено в Inspector для PlayerController.");
+            return;
+        }
+
+        // --- ВИКЛИК SFX ---
+        // Викликаємо PlaySFX, передаючи асет SFXData та позицію (якщо 3D звук)
+        SoundManager.Instance.PlaySFX(IncreaseSFXData, transform.position); // transform.position - позиція гравця
+        Debug.Log($"Відтворено звук вибуху: {IncreaseSFXData.name}");
     }
 
     public int GetPointsForCurrentLevelQuota() 

@@ -29,6 +29,11 @@ public class CollectablesManager : MonoBehaviour
     [Tooltip("Коллайдер землі, з яким буде скасовано ігнорування колізій перед знищенням об'єкта.")]
     public Collider groundCollider; 
 
+    // ---------------------------------------------
+    [Header("Player SFX")]
+    [Tooltip("Асет даних звуку вибуху. Перетягніть сюди SFX_Explosion з вікна Project.")]
+    public SFXData explosionSFXData; // Публічне посилання на SFXData асет
+
 
     void Awake()
     {
@@ -119,6 +124,7 @@ public class CollectablesManager : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         Debug.Log($"CollectablesManager: Об'єкт '{other.name}' увійшов у ТРИГЕР ЗНИЩЕННЯ (HoleDestroyer).");
+        
 
         Collectable collectable = other.GetComponent<Collectable>();
 
@@ -130,6 +136,7 @@ public class CollectablesManager : MonoBehaviour
             }
             
             Debug.Log($"CollectablesManager: Об'єкт '{other.name}' ПОГЛИНУТО (фінальний етап).");
+            TriggerExplosion();
 
             gameProgressionManager.AddPoints(collectable.scoreValue); 
 
@@ -145,6 +152,28 @@ public class CollectablesManager : MonoBehaviour
         {
             Debug.LogWarning($"CollectablesManager: Об'єкт '{other.name}' увійшов у Коллайдер Знищення, але не є Collectable або вже знищений, або немає GameProgressionManager.");
         }
+    }
+    
+    void TriggerExplosion()
+    {
+        // Перевіряємо, чи SoundManager готовий
+        if (SoundManager.Instance == null)
+        {
+            Debug.LogError("SoundManager.Instance не знайдено! Неможливо відтворити вибух.");
+            return;
+        }
+
+        // Перевіряємо, чи призначено SFXData для вибуху
+        if (explosionSFXData == null)
+        {
+            Debug.LogWarning("SFXData для вибуху не призначено в Inspector для PlayerController.");
+            return;
+        }
+
+        // --- ВИКЛИК SFX ---
+        // Викликаємо PlaySFX, передаючи асет SFXData та позицію (якщо 3D звук)
+        SoundManager.Instance.PlaySFX(explosionSFXData); // (explosionSFXData,transform.position) - позиція гравця
+        Debug.Log($"Відтворено звук вибуху: {explosionSFXData.name}");
     }
 
     IEnumerator DestroyAfterDelay(GameObject objToDestroy, float delay, bool isWinTarget)

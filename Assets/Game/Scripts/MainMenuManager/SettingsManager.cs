@@ -18,7 +18,8 @@ public class SettingsManager : MonoBehaviour
     public string musicVolumeParam = "MusicVolume";
 
     // Constants for PlayerPrefs keys
-    private const string MASTER_SOUND_TOGGLE_KEY = "MasterSoundToggle";
+    // ЗМІНА ТУТ: Зробимо MASTER_SOUND_TOGGLE_KEY публічним для доступу з SoundManager
+    public const string MASTER_SOUND_TOGGLE_KEY = "MasterSoundToggle"; 
     private const string SFX_VOLUME_KEY = "SFXVolume";
     private const string MENU_VOLUME_KEY = "MenuVolume"; 
     private const string MUSIC_VOLUME_KEY = "MusicVolume";
@@ -37,9 +38,6 @@ public class SettingsManager : MonoBehaviour
         Instance = this; 
         DontDestroyOnLoad(gameObject); 
 
-        // Initial load of settings when the game starts.
-        // Note: UI elements are not available yet in Awake, so we apply only game-wide settings.
-        // UI will be updated by MainMenuManager when SettingsPanel is shown.
         ApplyGameSettingsFromPlayerPrefs();
         Debug.Log("SettingsManager: Initial game settings applied from PlayerPrefs.");
     }
@@ -145,8 +143,6 @@ public class SettingsManager : MonoBehaviour
 
 
     // --- Modified: Method to load settings AND update UI elements ---
-    // This method is now called by MainMenuManager when the SettingsPanel becomes active.
-    // It takes the UI elements as parameters, ensuring it works with current scene's UI instances.
     public void LoadSettingsToUI(
         Toggle masterSoundToggleUI, Slider sfxSliderUI, Slider menuSoundSliderUI, Slider musicSliderUI,
         Toggle vibrationToggleUI, TMP_Dropdown fpsDropdownUI
