@@ -3,12 +3,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float moveSpeed = 5.0f;
-//////////////////////////////////////////
-    public float defaultSpeed = 8f;
-    public float ShiftSpeed = 30f;
-//////////////////////////////////////////
-
+    public float moveSpeed = 5.0f; 
     public float rotationSmoothTime = 0.1f; 
 
     [Header("Joystick Control")]
@@ -92,19 +87,6 @@ public class PlayerMovement : MonoBehaviour
         {
             moveDirection.Normalize();
         }
-
-
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-        {
-            moveSpeed = ShiftSpeed;
-        }
-        else
-        {
-            moveSpeed = defaultSpeed;
-        }
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
         // Розраховуємо нову бажану позицію
         Vector3 newPosition = transform.position + moveDirection * moveSpeed * Time.deltaTime;

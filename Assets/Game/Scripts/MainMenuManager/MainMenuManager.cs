@@ -213,7 +213,7 @@ public class MainMenuManager : MonoBehaviour
         string scenePath = SceneUtility.GetScenePathByBuildIndex(levelSceneBuildIndices[currentLevelIndex]);
         string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath); 
 
-        levelNameText.text = $"Рівень {currentLevelIndex + 1}: {sceneName}"; 
+        levelNameText.text = $"{sceneName}"; 
         
         bool isLevelPlayable = true; 
         
